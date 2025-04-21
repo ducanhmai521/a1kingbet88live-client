@@ -153,8 +153,12 @@ button {
 }
 
 .points-display {
+  display: inline-flex; /* Use inline-flex to allow items on the same line like text */
+  align-items: center;   /* Vertically center the items within the container */
+  gap: 8px;            /* Add some space between the points text and the button */
   background: rgba(0, 0, 0, 0.25);
-  padding: 8px 15px;
+  /* Adjust padding slightly if needed for vertical balance */
+  padding: 6px 12px;
   border-radius: 20px;
   font-weight: 600;
   font-size: 0.95rem;
@@ -1416,15 +1420,23 @@ button {
   color: var(--primary-light);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
-  width: 28px; /* Smaller size */
-  height: 28px;
+  /* You might want to make the button slightly smaller */
+  width: 24px;
+  height: 24px;
   padding: 0;
-  margin-left: 8px; /* Space from points */
-  font-size: 0.9rem;
+  /* No margin needed now as gap handles spacing */
+  /* margin-left: 8px; REMOVED */
+  /* Adjust icon size if needed */
+  font-size: 0.8rem;
   line-height: 1;
-  vertical-align: middle; /* Align with text */
+  /* Use flex to center the icon inside the button */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* vertical-align: middle; Not needed with flex */
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0; /* Prevent the button from shrinking if space is tight */
 }
 
 .transfer-icon-btn:hover {
@@ -1625,10 +1637,16 @@ button {
     font-size: 2rem;
   }
 
-  #authStatus {
-    width: 100%;
-    justify-content: space-between;
-  }
+#authStatus {
+  display: flex;
+  align-items: center; /* Keep items vertically aligned */
+  gap: 15px;
+}
+
+.logged-in-view {
+    display: flex; /* Use flex for the logged-in view as well */
+    align-items: center;
+    gap: 15px; /* Keep consistent gap */
 }
 
 
