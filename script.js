@@ -1,3 +1,4 @@
+const SERVER_URL = "__SERVER_URL__";
 
 const firebaseConfig = {
     apiKey: "__FIREBASE_API_KEY__",
@@ -30,7 +31,6 @@ if (firebaseConfig.apiKey.startsWith("__") || SERVER_URL.startsWith("__")) {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-const SERVER_URL = "__SERVER_URL__";
 const PING_URL = SERVER_URL;
 const PING_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
 let socket;
