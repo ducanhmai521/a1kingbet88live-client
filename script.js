@@ -269,7 +269,7 @@ function updateHeaderDisplay() {
         showElement(loggedOutView);
         hideElement(loggedInView);
         if(logoutBtn) logoutBtn.style.display = 'none';
-        if(transferPointsBtn) hideElement(transferPointsBtn);
+        if(transferPointsBtn) hideElement(transferPointsBtn); // Hide for guests
     } else {
         hideElement(loggedOutView);
         showElement(loggedInView);
@@ -278,16 +278,9 @@ function updateHeaderDisplay() {
         if(currentUserAvatarEl) currentUserAvatarEl.className = (localUser.avatarClass || 'fas fa-user-circle') + ' avatar';
 
         if (transferPointsBtn) {
-            if (localUser.isVerified && localUser.isSuperVerified) {
-                showElement(transferPointsBtn);
-                transferPointsBtn.disabled = false;
-                 transferPointsBtn.title = "Chuyển điểm";
-            } else {
-                hideElement(transferPointsBtn);
-                // Optionally add a title explaining why it's hidden/disabled
-                 // transferPointsBtn.disabled = true;
-                 // transferPointsBtn.title = "Yêu cầu: Xác thực Email & Super Verified";
-            }
+            showElement(transferPointsBtn);
+            transferPointsBtn.disabled = false; 
+            transferPointsBtn.title = "Chuyển/Nhận điểm"; 
         }
     }
 }
@@ -509,15 +502,19 @@ function resetBetState() { currentBetState = { choice: null, amount: 0, confirme
 
 function openTransferModal() {
     if (!transferModal || localUser.isGuest) return;
-    const canSend = localUser.isVerified && localUser.isSuperVerified;
+
     if (currentUserUidDisplay) {
         currentUserUidDisplay.textContent = localUser.userId || 'Không thể tải ID';
     }
-    if (copyUidFeedback) copyUidFeedback.textContent = '';
+    if (copyUidFeedback) copyUidFeedback.textContent = ''; 
+
+    // Clear inputs and errors from previous use
     if (recipientUidInput) recipientUidInput.value = '';
     if (transferAmountInput) transferAmountInput.value = '';
     if (transferErrorMsg) transferErrorMsg.textContent = '';
+
     updateTransferModalState();
+
     showModal(transferModal);
 }
 
@@ -526,33 +523,61 @@ function closeTransferModal() {
 }
 
 function updateTransferModalState() {
-    if (!confirmTransferBtn || !transferAmountInput || !recipientUidInput) return;
+    // Ensure elements exist
+    if (!confirmTransferBtn || !transferAmountInput || !recipientUidInput || !transferErrorMsg) return;
+
     const canSendBase = localUser.isVerified && localUser.isSuperVerified;
     const recipientUid = recipientUidInput.value.trim();
     const amount = parseInt(transferAmountInput.value, 10);
-    const minPointsRequired = 500;
+    const minPointsRequired = 500; // Points sender must have left AFTER transfer
     const minTransferAmount = 50;
+
     let error = '';
     let isButtonEnabled = false;
+    let areInputsEnabled = canSendBase; // Inputs are enabled only if base requirements met
 
     if (!canSendBase) {
-        error = 'Bạn không đủ điều kiện để chuyển điểm (Cần Super Verified & Xác thực Email).';
-    } else if (localUser.points < minPointsRequired + minTransferAmount) {
-         error = `Bạn cần ít nhất ${minPointsRequired + minTransferAmount} điểm để bắt đầu chuyển.`;
-    } else if (!recipientUid) {
-        error = 'Vui lòng nhập ID người nhận.';
-    } else if (recipientUid === localUser.userId) {
-         error = 'Bạn không thể tự chuyển điểm cho chính mình.';
-    } else if (isNaN(amount) || amount < minTransferAmount) {
-        error = `Số điểm chuyển tối thiểu là ${minTransferAmount}.`;
-    } else if (amount > localUser.points - minPointsRequired) {
-        error = `Số điểm tối đa bạn có thể chuyển là ${localUser.points - minPointsRequired}.`;
+        error = 'Bạn không đủ điều kiện để gửi điểm (Cần Super Verified & Xác thực Email). Bạn chỉ có thể nhận điểm.';
+        isButtonEnabled = false;
     } else {
-        isButtonEnabled = true;
+        // Only perform further checks if user is eligible to send
+        if (localUser.points < minPointsRequired + minTransferAmount) {
+             error = `Bạn cần ít nhất ${minPointsRequired + minTransferAmount} điểm (${minPointsRequired} điểm còn lại + ${minTransferAmount} điểm tối thiểu) để bắt đầu chuyển.`;
+        } else if (!recipientUid) {
+            // No error message here initially, let user type
+        } else if (recipientUid === localUser.userId) {
+             error = 'Bạn không thể tự chuyển điểm cho chính mình.';
+        } else if (isNaN(amount) || amount < minTransferAmount) {
+            // Allow button enable if UID is valid, even if amount is invalid initially
+             if(recipientUid) isButtonEnabled = true; // Enable button if UID is entered
+             if (transferAmountInput.value && (isNaN(amount) || amount < minTransferAmount)) { // Only show amount error if user typed something invalid
+                error = `Số điểm chuyển tối thiểu là ${minTransferAmount}.`;
+                isButtonEnabled = false; // Disable button again if amount is invalid
+             }
+        } else if (amount > localUser.points - minPointsRequired) {
+            error = `Bạn chỉ có thể chuyển tối đa ${localUser.points - minPointsRequired} điểm (để còn lại ${minPointsRequired}).`;
+        } else {
+            // All checks passed for enabling the button
+            isButtonEnabled = true;
+        }
     }
 
-    if (transferErrorMsg) transferErrorMsg.textContent = error;
-    confirmTransferBtn.disabled = !isButtonEnabled;
+    // Set error message
+    transferErrorMsg.textContent = error;
+    // Disable/Enable inputs based on base eligibility
+    recipientUidInput.disabled = !areInputsEnabled;
+    transferAmountInput.disabled = !areInputsEnabled;
+    // Disable/Enable button based on detailed checks AND base eligibility
+    confirmTransferBtn.disabled = !isButtonEnabled || !areInputsEnabled;
+
+    // Add placeholder text if inputs are disabled
+     if (!areInputsEnabled) {
+        recipientUidInput.placeholder = 'Không đủ điều kiện gửi';
+        transferAmountInput.placeholder = 'Không đủ điều kiện gửi';
+     } else {
+        recipientUidInput.placeholder = 'Nhập ID Firebase của người nhận';
+        transferAmountInput.placeholder = 'Ít nhất 50 điểm';
+     }
 }
 
 async function handleConfirmTransfer() {
