@@ -87,6 +87,9 @@
                       </div>
                  </div>
                  <span class="points-display">Điểm: <span id="userPoints">0</span></span>
+				          <button id="transferPointsBtn" class="header-action-btn" title="Chuyển/Nhận điểm" style="display: none;">
+             <i class="fas fa-exchange-alt"></i>
+         </button>
              </div>
              <h1 class="game-title desktop-game-title">A1KingBET88</h1>
             <div class="header-buttons">
@@ -187,6 +190,52 @@
 </div>
 
     </div>
+
+ <div id="transferModalWrapper" class="modal-overlay">
+     <div id="transferPanel" class="modal-panel transfer-panel">
+         <button id="closeTransferModalBtn" class="close-btn">×</button>
+         <h2><i class="fas fa-exchange-alt"></i> Chuyển / Nhận Điểm</h2>
+
+         <!-- Phần Nhận Điểm -->
+         <div class="transfer-section receive-section">
+             <h3><i class="fas fa-download"></i> Nhận Điểm</h3>
+             <p>Đây là ID người chơi của bạn. Hãy sao chép và gửi cho người muốn chuyển điểm cho bạn:</p>
+             <div class="uid-display-wrapper">
+                 <span id="myUidDisplay" class="uid-display">Đang tải ID...</span>
+                 <button id="copyUidBtn" class="control-button copy-btn" title="Sao chép ID"><i class="fas fa-copy"></i></button>
+             </div>
+              <p id="copyStatusMsg" class="info-message small-info"></p>
+         </div>
+
+         <hr class="settings-divider">
+
+         <!-- Phần Chuyển Điểm (Chỉ hiện khi đủ điều kiện) -->
+         <div id="sendPointsSection" class="transfer-section send-section" style="display: none;">
+             <h3><i class="fas fa-paper-plane"></i> Chuyển Điểm</h3>
+             <p class="transfer-rules">
+                 <i class="fas fa-info-circle"></i> Chỉ tài khoản đã <strong>Xác thực Email</strong> và được đánh dấu <strong>Super Verified</strong> mới có thể chuyển điểm.
+                 <br> - Điểm chuyển tối thiểu: <strong>50</strong>.
+                 <br> - Sau khi chuyển, bạn phải còn lại ít nhất <strong>500</strong> điểm.
+             </p>
+             <div class="setting-item">
+                 <label for="recipientUidInput">ID Người Nhận:</label>
+                 <input type="text" id="recipientUidInput" placeholder="Dán ID người nhận vào đây">
+             </div>
+             <div class="setting-item">
+                 <label for="transferAmountInput">Số Điểm Chuyển:</label>
+                 <input type="number" id="transferAmountInput" placeholder="Nhập số điểm (tối thiểu 50)" min="50">
+             </div>
+             <p id="transferErrorMsg" class="error-message"></p>
+             <button id="confirmTransferBtn" class="control-button transfer-action-btn">Xác Nhận Chuyển</button>
+         </div>
+
+         <!-- Thông báo khi không đủ điều kiện chuyển -->
+          <div id="transferNotAllowedMsg" class="info-message centered-info" style="display: none;">
+               Bạn cần Xác thực Email và được cấp Super Verified (siêu xác thực) để sử dụng tính năng Chuyển Điểm.
+          </div>
+
+     </div>
+ </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
