@@ -332,6 +332,7 @@ function handleUserUpdate(data) {
     let previousVerification = localUser.isVerified;
     let previousSuperVerification = localUser.isSuperVerified;
 
+    // Detect changes
     if (data.userId !== undefined && localUser.userId !== data.userId) { localUser.userId = data.userId; changed = true; }
     if (data.username !== undefined && localUser.username !== data.username) { localUser.username = data.username; changed = true; }
     if (data.points !== undefined && localUser.points !== data.points) { localUser.points = data.points; changed = true; }
@@ -339,26 +340,32 @@ function handleUserUpdate(data) {
     if (data.isGuest !== undefined && localUser.isGuest !== data.isGuest) { localUser.isGuest = data.isGuest; changed = true; }
     if (data.isVerified !== undefined && localUser.isVerified !== data.isVerified) { localUser.isVerified = data.isVerified; changed = true; }
     if (data.isSuperVerified !== undefined && localUser.isSuperVerified !== data.isSuperVerified) { localUser.isSuperVerified = data.isSuperVerified; changed = true; }
+    // Add isDev check if server sends it
+    if (data.isDev !== undefined && localUser.isDev !== data.isDev) { localUser.isDev = data.isDev; changed = true; }
+
 
     let isNowLoggedIn = !localUser.isGuest;
     let justLoggedIn = wasGuest && isNowLoggedIn;
 
     if (changed) {
-        console.log("User data changed, updating UI relevant parts");
-        updateHeaderDisplay(); // Update avatar, name, login/logout buttons
-        updatePointsDisplay(); // Update points display
-        updateChatVisibility(); // Update chat based on verification
-        updateVerificationStatusUI(); // Update verification status in settings
-        checkAndShowCongrats(); // Check for congrats popup
-        updateTransferModalState(); // Update transfer modal based on verification/superVerification
-        updateDevToolsVisibility(); // Update dev tools based on isDev status (if received)
-    }
+        console.log("User data changed via userUpdate.");
+        console.log("New localUser state:", JSON.stringify(localUser));
+        if (isNowLoggedIn) {
+             console.log("Calling updateUIAfterAuthChange from handleUserUpdate because user is logged in and data changed.");
+             updateUIAfterAuthChange(); 
+        } else {
+             updateHeaderDisplay();
+             updatePointsDisplay();
+        }
 
-    // If the user just transitioned from guest to logged in, ensure full UI update
-    if (justLoggedIn) {
-         console.log("User just logged in, performing full UI update");
-         updateUIAfterAuthChange();
+        checkAndShowCongrats(); // Always check congrats
+        updateDevToolsVisibility(); // Always update dev tools visibility
+
     }
+    console.log("handleUserUpdate finished. Final localUser:", JSON.stringify(localUser));
+    console.log("Logged in view display:", loggedInView?.style.display);
+    console.log("Logged out view display:", loggedOutView?.style.display);
+    console.log("Chat area display:", chatArea?.style.display);
 }
 
 // --- Game Logic Functions ---
