@@ -1,20 +1,19 @@
-const SERVER_URL = "a1kingbet88live.onrender.com";
+const SERVER_URL = "__SERVER_URL__";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAx2MVdfn_XReMIphBqW3S6kXi4zWfd60Y",
-    authDomain: "a1kingbet88.firebaseapp.com",
-    projectId: "a1kingbet88",
-    storageBucket: "a1kingbet88.firebasestorage.app",
-    messagingSenderId: "82811658998",
-    appId: "1:82811658998:web:2be59cdda82d1343c202d7",
-    measurementId: "G-ZS1Z924HVR"
+    apiKey: "__FIREBASE_API_KEY__",
+    authDomain: "__FIREBASE_AUTH_DOMAIN__",
+    projectId: "__FIREBASE_PROJECT_ID__",
+    storageBucket: "__FIREBASE_STORAGE_BUCKET__",
+    messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
+    appId: "__FIREBASE_APP_ID__",
+    measurementId: "__FIREBASE_MEASUREMENT_ID__"
 };
 
 if (firebaseConfig.apiKey.startsWith("__") || SERVER_URL.startsWith("__")) {
     console.error(
         "FATAL ERROR: Application is not configured correctly. Environment variables were not injected during build."
     );
-    // Display a user-friendly error message
     const body = document.querySelector('body');
     if (body) {
         body.innerHTML = `
@@ -24,7 +23,6 @@ if (firebaseConfig.apiKey.startsWith("__") || SERVER_URL.startsWith("__")) {
             <p>(Error: Environment variables not injected)</p>
         </div>`;
     }
-    // Prevent the rest of the script from running
     throw new Error("Environment variables not injected during build.");
 }
 
@@ -32,7 +30,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
 const PING_URL = SERVER_URL;
-const PING_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
+const PING_INTERVAL_MS = 10 * 60 * 1000;
 let socket;
 
 const entryWarningModal = document.getElementById('entryWarningModal');
@@ -124,6 +122,17 @@ const devSongSelect = document.getElementById('devSongSelect');
 const devPlaySongBtn = document.getElementById('devPlaySongBtn');
 const togglePasswordBtns = document.querySelectorAll('.toggle-password');
 const newMessagesIndicator = document.getElementById('newMessagesIndicator');
+const transferPointsBtn = document.getElementById('transferPointsBtn');
+const transferModal = document.getElementById('transferModal');
+const closeTransferBtn = document.getElementById('closeTransferBtn');
+const currentUserUidDisplay = document.getElementById('currentUserUidDisplay');
+const copyUidBtn = document.getElementById('copyUidBtn');
+const copyUidFeedback = document.getElementById('copyUidFeedback');
+const recipientUidInput = document.getElementById('recipientUidInput');
+const transferAmountInput = document.getElementById('transferAmountInput');
+const transferErrorMsg = document.getElementById('transferErrorMsg');
+const confirmTransferBtn = document.getElementById('confirmTransferBtn');
+
 
 let currentUser = null;
 let localUser = { userId: null, username: "Khách", points: 0, avatarClass: 'fas fa-user-ninja', isGuest: true, isVerified: false, isSuperVerified: false, isDev: false };
@@ -255,7 +264,33 @@ function setupGuestUI() {
     currentServerSongPath = null;
     hasMusicStarted = false;
 }
-function updateHeaderDisplay() { if (localUser.isGuest) { showElement(loggedOutView); hideElement(loggedInView); if(logoutBtn) logoutBtn.style.display = 'none'; } else { hideElement(loggedOutView); showElement(loggedInView); if(logoutBtn) logoutBtn.style.display = 'inline-block'; if(currentUsernameEl) currentUsernameEl.textContent = localUser.username; if(currentUserAvatarEl) currentUserAvatarEl.className = (localUser.avatarClass || 'fas fa-user-circle') + ' avatar'; } }
+function updateHeaderDisplay() {
+    if (localUser.isGuest) {
+        showElement(loggedOutView);
+        hideElement(loggedInView);
+        if(logoutBtn) logoutBtn.style.display = 'none';
+        if(transferPointsBtn) hideElement(transferPointsBtn);
+    } else {
+        hideElement(loggedOutView);
+        showElement(loggedInView);
+        if(logoutBtn) logoutBtn.style.display = 'inline-block';
+        if(currentUsernameEl) currentUsernameEl.textContent = localUser.username;
+        if(currentUserAvatarEl) currentUserAvatarEl.className = (localUser.avatarClass || 'fas fa-user-circle') + ' avatar';
+
+        if (transferPointsBtn) {
+            if (localUser.isVerified && localUser.isSuperVerified) {
+                showElement(transferPointsBtn);
+                transferPointsBtn.disabled = false;
+                 transferPointsBtn.title = "Chuyển điểm";
+            } else {
+                hideElement(transferPointsBtn);
+                // Optionally add a title explaining why it's hidden/disabled
+                 // transferPointsBtn.disabled = true;
+                 // transferPointsBtn.title = "Yêu cầu: Xác thực Email & Super Verified";
+            }
+        }
+    }
+}
 function updatePointsDisplay() { if (userPointsEl) userPointsEl.textContent = localUser.points.toLocaleString(); if (localUser.points <= 0 && isGameInitialized && gameStatus !== "GAMEOVER" && gameOverMessageEl?.style.display !== 'flex') { gameOver(); } else if (localUser.points > 0 && gameOverMessageEl?.style.display === 'flex') { hideElement(gameOverMessageEl); } updateBettingUIAccess(); }
 function updateBettingUIAccess() { const canBet = localUser.points > 0 && isBettingAllowed; if(betAmountInput) betAmountInput.disabled = !canBet; if(betTaiButton) betTaiButton.disabled = !canBet; if(betXiuButton) betXiuButton.disabled = !canBet; if(cancelBetBtn) cancelBetBtn.disabled = !isBettingAllowed;; if(skipCountdownBtn) skipCountdownBtn.disabled = !(localUser.isDev && isBettingAllowed); updateDevToolsVisibility(); }
 function updateVerificationStatusUI() { if (!sendVerificationBtn || !verificationStatusMessageEl) return; clearInterval(verificationCooldownTimer); verificationCooldownTimer = null; if (localUser.isGuest) { hideElement(sendVerificationBtn); verificationStatusMessageEl.textContent = ''; } else { if (localUser.isVerified) { hideElement(sendVerificationBtn); verificationStatusMessageEl.textContent = '✅ Email đã được xác thực'; verificationStatusMessageEl.style.color = 'var(--success-color)'; } else { showElement(sendVerificationBtn); verificationStatusMessageEl.textContent = '⚠️ Email chưa được xác thực'; verificationStatusMessageEl.style.color = 'var(--error-color)'; const now = Date.now(); const timeRemaining = lastVerificationRequestTime + VERIFICATION_COOLDOWN_MS - now; if (timeRemaining > 0) { sendVerificationBtn.disabled = true; const updateCooldownText = () => { const currentNow = Date.now(); const remaining = lastVerificationRequestTime + VERIFICATION_COOLDOWN_MS - currentNow; if (remaining <= 0) { clearInterval(verificationCooldownTimer); verificationCooldownTimer = null; if (!localUser.isVerified) { sendVerificationBtn.disabled = false; sendVerificationBtn.textContent = 'Gửi lại Email Xác Thực'; } } else { const minutes = Math.floor(remaining / 60000); const seconds = Math.floor((remaining % 60000) / 1000); sendVerificationBtn.textContent = `Chờ ${minutes}:${seconds.toString().padStart(2, '0')}`; } }; updateCooldownText(); verificationCooldownTimer = setInterval(updateCooldownText, 1000); } else { sendVerificationBtn.disabled = false; sendVerificationBtn.textContent = 'Gửi lại Email Xác Thực'; } } } }
@@ -264,6 +299,7 @@ function handleUserUpdate(data) {
     let wasGuest = localUser.isGuest;
     let hadZeroPoints = localUser.points <= 0;
     let changed = false;
+    let prevSuperVerified = localUser.isSuperVerified;
 
     if (data.userId !== undefined) { localUser.userId = data.userId; changed = true; }
     if (data.username !== undefined) { localUser.username = data.username; changed = true; }
@@ -284,6 +320,9 @@ function handleUserUpdate(data) {
         updateChatVisibility();
         updateVerificationStatusUI();
         checkAndShowCongrats();
+        if (transferModal?.style.display === 'flex') {
+             updateTransferModalState();
+        }
     }
 }
 
@@ -317,9 +356,7 @@ async function sendMessage() {
 
 function displayMessage(messageData) {
     if (!chatMessages || !messageData || !messageData.text) return;
-
-    // Check if scrolled near bottom BEFORE adding the new message
-    const tolerance = 10; // Pixels tolerance
+    const tolerance = 10;
     const isScrolledToBottom = chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + tolerance;
 
     const msgDiv = document.createElement('div');
@@ -328,36 +365,29 @@ function displayMessage(messageData) {
     if (messageData.senderUid === localUser.userId) {
         msgDiv.classList.add('sent-by-me');
     }
-     // ... (rest of the message creation code remains the same) ...
-     // Sender Info Div creation
     const senderInfoDiv = document.createElement('div');
     senderInfoDiv.classList.add('sender-info');
 
-    // 1. Avatar
     const avatarEl = document.createElement('i');
     avatarEl.className = (messageData.senderAvatar || 'fas fa-user-circle') + ' sender-avatar';
     senderInfoDiv.appendChild(avatarEl);
 
-    // 2. Username
     const nameSpan = document.createElement('span');
     nameSpan.classList.add('sender-name');
     nameSpan.textContent = messageData.senderUsername || 'Người chơi';
     senderInfoDiv.appendChild(nameSpan);
 
-    // 3. Badge Container & Image (Conditionally)
-    const badgeContainer = document.createElement('span'); // Use span for inline-flex behavior
+    const badgeContainer = document.createElement('span');
     badgeContainer.classList.add('super-verified-badge-container');
     if (messageData.senderIsSuperVerified) {
         const badgeImg = document.createElement('img');
         badgeImg.src = 'superverifed.png';
         badgeImg.alt = 'Verified';
         badgeImg.classList.add('super-verified-badge');
-        badgeContainer.appendChild(badgeImg); // Put image inside container
+        badgeContainer.appendChild(badgeImg);
     }
     senderInfoDiv.appendChild(badgeContainer);
 
-
-    // 4. Timestamp (pushes to the right)
     if (messageData.timestamp) {
         const timeSpan = document.createElement('span');
         timeSpan.classList.add('message-timestamp');
@@ -373,35 +403,29 @@ function displayMessage(messageData) {
     msgDiv.appendChild(senderInfoDiv);
     msgDiv.appendChild(textP);
 
-    chatMessages.appendChild(msgDiv); // Add the message
+    chatMessages.appendChild(msgDiv);
 
-    // Now decide whether to scroll or show notification
     if (isScrolledToBottom) {
         scrollToBottom(chatMessages);
-        if (newMessagesIndicator) newMessagesIndicator.style.display = 'none'; // Hide indicator if scrolled
+        if (newMessagesIndicator) newMessagesIndicator.style.display = 'none';
     } else {
-        // Only show indicator if the new message wasn't sent by the current user
         if (messageData.senderUid !== localUser.userId) {
              if (newMessagesIndicator) newMessagesIndicator.style.display = 'block';
         } else {
-            // If sent by me, always scroll to bottom
             scrollToBottom(chatMessages);
             if (newMessagesIndicator) newMessagesIndicator.style.display = 'none';
         }
     }
 }
 
-
-
 function displayMessageHistory(messages) {
     if (!chatMessages) return;
     chatMessages.innerHTML = '';
-    if (newMessagesIndicator) newMessagesIndicator.style.display = 'none'; // Hide on history load
+    if (newMessagesIndicator) newMessagesIndicator.style.display = 'none';
     if (!messages || messages.length === 0) {
         return;
     }
-    messages.forEach(msg => displayMessage(msg)); // Use displayMessage to add each
-    // scrollToBottom(chatMessages); // displayMessage handles scrolling logic now
+    messages.forEach(msg => displayMessage(msg));
 }
 function scrollToBottom(element) { if (element) { element.scrollTop = element.scrollHeight; } }
 
@@ -483,6 +507,97 @@ async function restartGame() {
 function disableBettingUI() { isBettingAllowed = false; updateBettingUIAccess(); }
 function resetBetState() { currentBetState = { choice: null, amount: 0, confirmed: false }; if(currentBetMessageEl) currentBetMessageEl.textContent = ''; if(currentBetMessageEl) currentBetMessageEl.className = ''; }
 
+function openTransferModal() {
+    if (!transferModal || localUser.isGuest) return;
+    const canSend = localUser.isVerified && localUser.isSuperVerified;
+    if (currentUserUidDisplay) {
+        currentUserUidDisplay.textContent = localUser.userId || 'Không thể tải ID';
+    }
+    if (copyUidFeedback) copyUidFeedback.textContent = '';
+    if (recipientUidInput) recipientUidInput.value = '';
+    if (transferAmountInput) transferAmountInput.value = '';
+    if (transferErrorMsg) transferErrorMsg.textContent = '';
+    updateTransferModalState();
+    showModal(transferModal);
+}
+
+function closeTransferModal() {
+    hideModal(transferModal);
+}
+
+function updateTransferModalState() {
+    if (!confirmTransferBtn || !transferAmountInput || !recipientUidInput) return;
+    const canSendBase = localUser.isVerified && localUser.isSuperVerified;
+    const recipientUid = recipientUidInput.value.trim();
+    const amount = parseInt(transferAmountInput.value, 10);
+    const minPointsRequired = 500;
+    const minTransferAmount = 50;
+    let error = '';
+    let isButtonEnabled = false;
+
+    if (!canSendBase) {
+        error = 'Bạn không đủ điều kiện để chuyển điểm (Cần Super Verified & Xác thực Email).';
+    } else if (localUser.points < minPointsRequired + minTransferAmount) {
+         error = `Bạn cần ít nhất ${minPointsRequired + minTransferAmount} điểm để bắt đầu chuyển.`;
+    } else if (!recipientUid) {
+        error = 'Vui lòng nhập ID người nhận.';
+    } else if (recipientUid === localUser.userId) {
+         error = 'Bạn không thể tự chuyển điểm cho chính mình.';
+    } else if (isNaN(amount) || amount < minTransferAmount) {
+        error = `Số điểm chuyển tối thiểu là ${minTransferAmount}.`;
+    } else if (amount > localUser.points - minPointsRequired) {
+        error = `Số điểm tối đa bạn có thể chuyển là ${localUser.points - minPointsRequired}.`;
+    } else {
+        isButtonEnabled = true;
+    }
+
+    if (transferErrorMsg) transferErrorMsg.textContent = error;
+    confirmTransferBtn.disabled = !isButtonEnabled;
+}
+
+async function handleConfirmTransfer() {
+    if (!recipientUidInput || !transferAmountInput || !confirmTransferBtn) return;
+    const recipientUid = recipientUidInput.value.trim();
+    const amount = parseInt(transferAmountInput.value, 10);
+    updateTransferModalState();
+    if (confirmTransferBtn.disabled) {
+         console.warn("Transfer button clicked while disabled, likely validation fail.");
+         return;
+    }
+    const idToken = await getIdToken();
+    if (!idToken) {
+        if(transferErrorMsg) transferErrorMsg.textContent = "Lỗi xác thực, vui lòng thử đăng nhập lại.";
+        return;
+    }
+    confirmTransferBtn.disabled = true;
+    if(transferErrorMsg) transferErrorMsg.textContent = 'Đang xử lý giao dịch...';
+    socket.emit('requestPointsTransfer', {
+        recipientUid: recipientUid,
+        amount: amount,
+        token: idToken
+    });
+}
+
+function handleCopyUid() {
+    if (!currentUserUidDisplay || !copyUidFeedback) return;
+    const uidToCopy = currentUserUidDisplay.textContent;
+    if (!uidToCopy || uidToCopy === 'Không thể tải ID') {
+        copyUidFeedback.textContent = 'Lỗi sao chép ID.';
+        copyUidFeedback.style.color = 'var(--error-color)';
+        return;
+    }
+    navigator.clipboard.writeText(uidToCopy).then(() => {
+        copyUidFeedback.textContent = 'Đã sao chép ID!';
+        copyUidFeedback.style.color = 'var(--success-color)';
+        setTimeout(() => { copyUidFeedback.textContent = ''; }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy UID:', err);
+        copyUidFeedback.textContent = 'Sao chép thất bại.';
+        copyUidFeedback.style.color = 'var(--error-color)';
+    });
+}
+
+
 function setupSocketListeners() {
     if (!SERVER_URL || SERVER_URL === "YOUR_RENDER_APP_URL") { console.error("Chưa cấu hình SERVER_URL!"); alert("Lỗi cấu hình kết nối."); if(sessionStatusEl) sessionStatusEl.textContent = "Lỗi cấu hình!"; return; } if (typeof io === 'undefined') { console.error("Socket.IO client not loaded!"); alert("Lỗi tải thư viện kết nối."); if(sessionStatusEl) sessionStatusEl.textContent = "Lỗi tải thư viện!"; return; } console.log("Setting up Socket.IO connection to:", SERVER_URL); if(socket && socket.connected) { socket.disconnect(); } socket = io(SERVER_URL, { reconnection: true, reconnectionAttempts: 5, reconnectionDelay: 1000, transports: ['websocket', 'polling'] });
     socket.on("connect", async () => { console.log("Connected to server:", socket.id); if(sessionStatusEl) sessionStatusEl.textContent = "Đã kết nối!"; gameStatus = "CONNECTED"; if (currentUser) { const idToken = await getIdToken(); if(idToken) { socket.emit('userLoggedIn', { token: idToken }); } } });
@@ -499,23 +614,19 @@ function setupSocketListeners() {
 
         const displayLimit = 5;
         topPlayers.slice(0, displayLimit).forEach((player, index) => {
-            const li = document.createElement('li'); // The flex container
-
-            // 1. Rank
+            const li = document.createElement('li');
             const rankSpan = document.createElement('span');
             rankSpan.className = 'leaderboard-rank';
             rankSpan.textContent = `${index + 1}.`;
             li.appendChild(rankSpan);
 
-            // 2. Username
             const nameSpan = document.createElement('span');
             nameSpan.className = 'leaderboard-name';
             nameSpan.textContent = player.username || 'Người chơi ẩn';
             nameSpan.title = player.username || 'Người chơi ẩn';
             li.appendChild(nameSpan);
 
-            // 3. Badge Container & Image (Conditionally)
-            const badgeContainer = document.createElement('span'); // Use span
+            const badgeContainer = document.createElement('span');
             badgeContainer.classList.add('super-verified-badge-container');
              if (player.isSuperVerified) {
                 const badgeImg = document.createElement('img');
@@ -524,10 +635,8 @@ function setupSocketListeners() {
                 badgeImg.classList.add('super-verified-badge');
                 badgeContainer.appendChild(badgeImg);
             }
-             // Append container (empty or with image)
             li.appendChild(badgeContainer);
 
-            // 4. Points
             const pointsSpan = document.createElement('span');
             pointsSpan.className = 'leaderboard-points';
             pointsSpan.textContent = (player.points !== undefined && player.points !== null) ? player.points.toLocaleString() : 'N/A';
@@ -587,6 +696,41 @@ function setupSocketListeners() {
          alert(`Lỗi Xác thực: ${message}. Vui lòng đăng nhập lại.`);
          handleLogout();
      });
+     socket.on('transferSuccess', (data) => {
+         console.log('Transfer success:', data);
+         localUser.points = data.newPoints;
+         updatePointsDisplay();
+         if (transferModal?.style.display === 'flex') {
+              if(transferErrorMsg) {
+                  transferErrorMsg.textContent = `Chuyển thành công ${data.amountSent.toLocaleString()} điểm đến ${data.recipientUsername || data.recipientUid}.`;
+                  transferErrorMsg.style.color = 'var(--success-color)';
+              }
+              if (recipientUidInput) recipientUidInput.value = '';
+              if (transferAmountInput) transferAmountInput.value = '';
+              if (confirmTransferBtn) confirmTransferBtn.disabled = true;
+         } else {
+              showTemporaryMessage(resultMessageEl, `Đã chuyển ${data.amountSent.toLocaleString()} điểm.`, 'win', 4000);
+         }
+          updateTransferModalState();
+     });
+     socket.on('transferError', (message) => {
+         console.error('Transfer Error from server:', message);
+         if (transferModal?.style.display === 'flex') {
+              if(transferErrorMsg) {
+                 transferErrorMsg.textContent = message;
+                 transferErrorMsg.style.color = 'var(--error-color)';
+              }
+              if (confirmTransferBtn) confirmTransferBtn.disabled = false;
+              updateTransferModalState();
+         } else {
+              showTemporaryMessage(resultMessageEl, `Lỗi chuyển điểm: ${message}`, 'loss', 5000);
+         }
+     });
+     socket.on('pointsReceived', (data) => {
+         console.log('Points received:', data);
+         showTemporaryMessage(resultMessageEl, `Bạn nhận được ${data.amountReceived.toLocaleString()} điểm từ ${data.senderUsername}!`, 'win', 5000);
+         // Point updates are handled by 'userUpdate'
+     });
 }
 
 function updateUIFromState(state) { if (!state || !state.status || state.sessionCount === undefined || state.endTime === undefined) { console.warn("Incomplete gameStateUpdate received:", state); return; } clearInterval(localTimerInterval); clearInterval(waitInterval); currentSessionCount = state.sessionCount; gameStatus = state.status; const now = Date.now(); const serverEndTime = state.endTime; switch (state.status) { case "BETTING": isBettingAllowed = true; if(sessionStatusEl) sessionStatusEl.textContent = `Phiên #${state.sessionCount}`; if(timerAreaEl) showElement(timerAreaEl); if(resultAreaEl) resultAreaEl.style.visibility = 'hidden'; if(resultCoverEl) hideElement(resultCoverEl); if(timerLabelEl) timerLabelEl.textContent = "Thời gian cược"; hasRevealedLocally = false; resetBetState(); if (resultMessageEl) resultMessageEl.textContent = ''; if (resultMessageEl) resultMessageEl.className = ''; const bettingTimeLeft = Math.max(0, Math.floor((serverEndTime - now) / 1000)); if(timerEl) timerEl.textContent = bettingTimeLeft; updateBettingUIAccess(); if (bettingTimeLeft > 0) { localTimerInterval = setInterval(() => { const currentNow = Date.now(); const currentLeft = Math.max(0, Math.floor((serverEndTime - currentNow) / 1000)); if(timerEl) timerEl.textContent = currentLeft; if (currentLeft <= 5 && currentLeft > 0) centerDisplayEl?.classList.add('low-time'); else centerDisplayEl?.classList.remove('low-time'); if (currentLeft <= 0) { clearInterval(localTimerInterval); if(timerLabelEl) timerLabelEl.textContent = "Hết giờ"; if(timerEl) timerEl.textContent = "⏳"; centerDisplayEl?.classList.remove('low-time'); disableBettingUI(); isBettingAllowed = false; } }, 500); } else { if(timerLabelEl) timerLabelEl.textContent = "Hết giờ"; if(timerEl) timerEl.textContent = "⏳"; disableBettingUI(); isBettingAllowed = false; } break; case "REVEALING": isBettingAllowed = false; disableBettingUI(); if(timerAreaEl) hideElement(timerAreaEl); if (!hasRevealedLocally) { if(resultAreaEl) resultAreaEl.style.visibility = 'hidden'; if(resultCoverEl) showElement(resultCoverEl); if(resultCoverEl) resultCoverEl.style.transform = `translate(0px, 0px)`; if(dice1El) dice1El.textContent = '?'; if(dice2El) dice2El.textContent = '?'; if(dice3El) dice3El.textContent = '?'; if(diceSumEl) diceSumEl.textContent = 'Tổng: ?'; if(gameOutcomeEl) gameOutcomeEl.textContent = '?'; if(gameOutcomeEl) gameOutcomeEl.className = 'result-outcome'; } else { if(resultAreaEl) resultAreaEl.style.visibility = 'visible'; if(resultCoverEl) hideElement(resultCoverEl); } if(sessionStatusEl) sessionStatusEl.textContent = `Phiên #${state.sessionCount} - Chờ kết quả...`; if (currentBetState.confirmed) { showTemporaryMessage(currentBetMessageEl, `Đã chốt cược: ${currentBetState.choice} (${currentBetState.amount.toLocaleString()})`, 'win'); } else { showTemporaryMessage(currentBetMessageEl, "Chưa đặt cược.", 'no-bet'); } break; case "WAITING": isBettingAllowed = false; disableBettingUI(); if(resultCoverEl) hideElement(resultCoverEl); if(timerAreaEl) hideElement(timerAreaEl); if(resultAreaEl) resultAreaEl.style.visibility = 'visible'; hasRevealedLocally = true; const result = state.diceResult; if (result) { if(dice1El) dice1El.textContent = result.d1; if(dice2El) dice2El.textContent = result.d2; if(dice3El) dice3El.textContent = result.d3; if(diceSumEl) diceSumEl.textContent = `Tổng: ${result.sum}`; if(gameOutcomeEl) { gameOutcomeEl.textContent = result.outcome; gameOutcomeEl.className = 'result-outcome'; if (result.isTriple) { gameOutcomeEl.classList.add('triple'); gameOutcomeEl.style.color = '#f1c40f'; } else { gameOutcomeEl.classList.add(result.outcome.toLowerCase()); } } const waitTimeLeft = Math.max(0, Math.floor((serverEndTime - now) / 1000)); if(sessionStatusEl) sessionStatusEl.textContent = `Phiên #${state.sessionCount} - KQ: ${result.outcome}. Phiên mới sau ${waitTimeLeft}s...`; if (waitTimeLeft > 0) { waitInterval = setInterval(() => { const currentNowWait = Date.now(); const currentWaitLeft = Math.max(0, Math.floor((serverEndTime - currentNowWait) / 1000)); if (currentWaitLeft >= 0) { if(sessionStatusEl) sessionStatusEl.textContent = `Phiên #${state.sessionCount} - KQ: ${result.outcome}. Phiên mới sau ${currentWaitLeft}s...`; } if (currentWaitLeft <= 0) { clearInterval(waitInterval); if(sessionStatusEl) sessionStatusEl.textContent = `Phiên #${state.sessionCount} - KQ: ${result.outcome}. Chuẩn bị...`; } }, 1000); } else { if(sessionStatusEl) sessionStatusEl.textContent = `Phiên #${state.sessionCount} - KQ: ${result.outcome}. Chuẩn bị...`; } } else { console.warn("WAITING state without diceResult!"); if(sessionStatusEl) sessionStatusEl.textContent = `Phiên #${state.sessionCount} - Đang xử lý kết quả...`; } break; default: console.error("Unknown game state from server:", state.status); if(sessionStatusEl) sessionStatusEl.textContent = "Trạng thái không xác định!"; disableBettingUI(); isBettingAllowed = false; } }
@@ -601,49 +745,38 @@ function initializeGame() {
     togglePasswordBtns.forEach(btn => btn.addEventListener('click', togglePasswordVisibility));
     loginPasswordInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleLogin(); } });
     registerPasswordInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleRegister(); } });
-	if (newMessagesIndicator) {
-    newMessagesIndicator.addEventListener('click', () => {
-        scrollToBottom(chatMessages);
-        newMessagesIndicator.style.display = 'none'; // Hide after clicking
-    });
-}
+    if (newMessagesIndicator) { newMessagesIndicator.addEventListener('click', () => { scrollToBottom(chatMessages); newMessagesIndicator.style.display = 'none'; }); }
+    if (chatMessages) { chatMessages.addEventListener('scroll', () => { if (chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 1) { if (newMessagesIndicator) newMessagesIndicator.style.display = 'none'; } }); }
 
-// Also, hide indicator when user scrolls down manually
-if (chatMessages) {
-    chatMessages.addEventListener('scroll', () => {
-        if (chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 1) {
-            if (newMessagesIndicator) newMessagesIndicator.style.display = 'none';
-        }
-    });
-}
+    if(transferPointsBtn) transferPointsBtn.addEventListener('click', openTransferModal);
+    if(closeTransferBtn) closeTransferBtn.addEventListener('click', closeTransferModal);
+    if(transferModal) transferModal.addEventListener('click', (event) => { if (event.target === transferModal) closeTransferModal(); });
+    if(copyUidBtn) copyUidBtn.addEventListener('click', handleCopyUid);
+    if(confirmTransferBtn) confirmTransferBtn.addEventListener('click', handleConfirmTransfer);
+    if(recipientUidInput) recipientUidInput.addEventListener('input', updateTransferModalState);
+    if(transferAmountInput) transferAmountInput.addEventListener('input', updateTransferModalState);
+
     setupSocketListeners(); isGameInitialized = true; console.log("Game Initialized. Waiting for server connection and state..."); if(sessionStatusEl) sessionStatusEl.textContent = "Đang kết nối server... (tải lại trang nếu đợi quá 1 phút)"; disableBettingUI(); if(cancelBetBtn) cancelBetBtn.disabled = true;
 }
 
 function handleWarningAccept() { console.log("Warning Accepted"); hideModal(entryWarningModal); showModal(authModal); switchAuthTab('login'); }
 function showGameAndInitializeIfNeeded() { console.log("Showing game wrapper"); if(gameWrapper) showElement(gameWrapper); if (!isGameInitialized) { console.log("Initializing game..."); initializeGame(); } else { console.log("Game already initialized."); if (socket && !socket.connected) { console.log("Attempting to reconnect socket..."); socket.connect(); } else if (!socket) { console.warn("Socket missing on re-show. Re-initializing."); initializeGame(); } } }
 
-// --- START: Keep-Alive Ping Function ---
 function keepAlivePing() {
-    if (!PING_URL) return; // Don't ping if URL is not set
+    if (!PING_URL) return;
     console.log(`[KeepAlive] Pinging server at ${PING_URL}...`);
-    // Use default 'cors' mode since the server is configured for it in server.js
     fetch(PING_URL, { method: 'GET' })
         .then(response => {
-            // Optional: Check status if needed, but for keep-alive, just sending is key
             if (response.ok) {
                 console.log(`[KeepAlive] Ping successful (Status: ${response.status}).`);
             } else {
-                 // Log non-OK responses but don't treat as critical error for keep-alive
                  console.warn(`[KeepAlive] Ping request sent, but server responded with status: ${response.status}`);
             }
         })
         .catch(error => {
-            // Log errors (e.g., network issue, server truly down)
             console.error('[KeepAlive] Ping failed:', error);
         });
 }
-// --- END: Keep-Alive Ping Function ---
-
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed.");
@@ -673,23 +806,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log("Initial modal listeners attached.");
 
-    // --- Start: Ping Logic ---
     console.log(`Initial ping to server at ${PING_URL}...`);
-    // Initial ping on load to wake up server if sleeping
-    fetch(PING_URL, { method: 'GET' }) // Use GET for consistency and Render wake-up
+    fetch(PING_URL, { method: 'GET' })
         .then(response => console.log(`Initial server ping response status: ${response.status}`))
         .catch(error => console.error('Initial server ping failed:', error))
         .finally(() => {
             console.log("Proceeding with initial UI setup after initial ping attempt...");
-            // Usually, UI setup can proceed without waiting for ping success
         });
 
-    // Set up the recurring ping
     setInterval(keepAlivePing, PING_INTERVAL_MS);
     console.log(`[KeepAlive] Periodic ping every ${PING_INTERVAL_MS / 1000 / 60} minutes initialized.`);
-    // --- End: Ping Logic ---
 
-    // Show the entry warning modal first
     if (entryWarningModal) showModal(entryWarningModal);
-    // Game initialization will happen *after* the warning is accepted and auth/guest is chosen.
 });

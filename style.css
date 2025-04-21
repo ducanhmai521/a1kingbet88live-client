@@ -1410,6 +1410,145 @@ button {
     background-color: var(--primary-light);
 }
 
+/* Transfer Icon Button */
+.transfer-icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--primary-light);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 28px; /* Smaller size */
+  height: 28px;
+  padding: 0;
+  margin-left: 8px; /* Space from points */
+  font-size: 0.9rem;
+  line-height: 1;
+  vertical-align: middle; /* Align with text */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.transfer-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.transfer-icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    background: rgba(128, 128, 128, 0.2);
+}
+
+
+/* Transfer Modal Styles */
+.transfer-panel {
+  max-width: 550px;
+  width: 90%;
+}
+
+.transfer-panel h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--primary-light);
+    margin-bottom: 20px;
+}
+
+.transfer-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.transfer-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    color: #eee;
+    margin-bottom: 10px;
+}
+
+.receive-section h3 i { color: var(--success-color); }
+.send-section h3 i { color: var(--secondary-color); }
+
+.uid-display-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.uid-display {
+    flex-grow: 1;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    color: #ffcc00;
+    word-break: break-all;
+}
+
+.copy-uid-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.copy-uid-btn:hover {
+    background: var(--primary-light);
+}
+
+.small-feedback {
+    font-size: 0.8em;
+    min-height: 1em;
+    margin-top: 5px;
+    color: var(--success-color);
+}
+
+.transfer-rules {
+    font-size: 0.85rem;
+    color: #ccc;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.transfer-rules strong {
+    color: #fff;
+}
+
+.superverified-text {
+    color: #ffcc00; /* Gold color for emphasis */
+    font-weight: bold;
+}
+
+.transfer-action-btn {
+    width: 100%;
+    margin-top: 10px;
+    background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+}
+
+.transfer-action-btn:hover:not(:disabled) {
+     background: linear-gradient(135deg, #ff8a8a, var(--secondary-color));
+}
+
+.transfer-action-btn:disabled {
+    background: var(--neutral-color) !important; /* Ensure disabled style overrides */
+}
+
 @media (max-width: 992px) {
   .game-header {
     flex-direction: column;

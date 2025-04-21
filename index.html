@@ -9,6 +9,45 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+ <div id="transferModal" class="modal-overlay">
+     <div class="modal-panel transfer-panel">
+          <button id="closeTransferBtn" class="close-btn">×</button>
+          <h2><i class="fas fa-exchange-alt"></i> Chuyển Điểm</h2>
+
+          <!-- Receive Section -->
+          <div class="transfer-section receive-section">
+              <h3><i class="fas fa-download"></i> Nhận Điểm</h3>
+              <p>Gửi ID người dùng duy nhất của bạn cho người muốn chuyển điểm:</p>
+              <div class="uid-display-wrapper">
+                  <span id="currentUserUidDisplay" class="uid-display">Đang tải ID...</span>
+                  <button id="copyUidBtn" class="copy-uid-btn" title="Sao chép ID"><i class="fas fa-copy"></i></button>
+              </div>
+              <p id="copyUidFeedback" class="info-message small-feedback"></p>
+          </div>
+
+          <hr class="settings-divider">
+
+          <!-- Send Section -->
+          <div class="transfer-section send-section">
+              <h3><i class="fas fa-upload"></i> Gửi Điểm</h3>
+              <p class="transfer-rules">
+                  <strong>Yêu cầu:</strong> Phải là tài khoản <strong class="superverified-text">Super Verified</strong> và đã <strong>xác thực email</strong>.<br>
+                  Sau khi chuyển, bạn phải còn lại ít nhất <strong>500</strong> điểm.<br>
+                  Số điểm chuyển tối thiểu là <strong>50</strong>.
+              </p>
+              <div class="setting-item">
+                  <label for="recipientUidInput">ID Người Nhận:</label>
+                  <input type="text" id="recipientUidInput" placeholder="Nhập ID Firebase của người nhận">
+              </div>
+              <div class="setting-item">
+                  <label for="transferAmountInput">Số Điểm Chuyển:</label>
+                  <input type="number" id="transferAmountInput" placeholder="Ít nhất 50 điểm" min="50">
+              </div>
+              <p id="transferErrorMsg" class="error-message"></p>
+              <button id="confirmTransferBtn" class="control-button transfer-action-btn" disabled>Chuyển Điểm</button>
+          </div>
+     </div>
+ </div>
     <div id="entryWarningModal" class="modal-overlay show">
         <div class="modal-panel warning-panel">
              <h2><i class="fas fa-exclamation-triangle"></i> A1KingBET88 Thông Báo</h2>
@@ -86,7 +125,11 @@
                          <span class="username" id="currentUsername"></span>
                       </div>
                  </div>
-                 <span class="points-display">Điểm: <span id="userPoints">0</span></span>
+                 <span class="points-display">Điểm: <span id="userPoints">0</span>
+				 <button id="transferPointsBtn" class="transfer-icon-btn" title="Chuyển điểm" style="display: none;">
+                 <i class="fas fa-exchange-alt"></i>
+				</button>
+			 </span>
              </div>
              <h1 class="game-title desktop-game-title">A1KingBET88</h1>
             <div class="header-buttons">
