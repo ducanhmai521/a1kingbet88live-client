@@ -1,4 +1,3 @@
-
 :root {
   --primary-color: #6c63ff;
   --primary-light: #887dff;
@@ -93,7 +92,7 @@ button {
 }
 
 .control-button:disabled, button:disabled {
-  background: var(--neutral-color);
+  background: var(--neutral-color) !important; /* Added !important */
   cursor: not-allowed;
   opacity: 0.6;
   transform: none;
@@ -133,7 +132,7 @@ button {
 
 #authStatus {
   display: flex;
-  align-items: center;
+  align-items: center; /* Keep items vertically aligned */
   gap: 15px;
 }
 
@@ -629,11 +628,10 @@ button {
   -webkit-backdrop-filter: blur(var(--backdrop-blur));
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  /* min-height: 300px;  <-- Can be kept or removed, height takes precedence */
-  height: 400px; /* <-- ADD THIS (Adjust value as needed) */
+  height: 400px;
   display: flex;
   flex-direction: column;
-  position: relative; /* Needed for absolute positioning of indicator */
+  position: relative;
 }
 
 .leaderboard-area h4, .chat-area h4 {
@@ -1420,23 +1418,17 @@ button {
   color: var(--primary-light);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
-  /* You might want to make the button slightly smaller */
   width: 24px;
   height: 24px;
   padding: 0;
-  /* No margin needed now as gap handles spacing */
-  /* margin-left: 8px; REMOVED */
-  /* Adjust icon size if needed */
   font-size: 0.8rem;
   line-height: 1;
-  /* Use flex to center the icon inside the button */
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* vertical-align: middle; Not needed with flex */
   cursor: pointer;
   transition: all 0.2s ease;
-  flex-shrink: 0; /* Prevent the button from shrinking if space is tight */
+  flex-shrink: 0;
 }
 
 .transfer-icon-btn:hover {
@@ -1561,6 +1553,141 @@ button {
     background: var(--neutral-color) !important; /* Ensure disabled style overrides */
 }
 
+
+/* START: Added Notification Modal Styles */
+.notification-panel {
+  max-width: 480px;
+  width: 90%;
+  text-align: center; /* Center align content */
+}
+
+.notification-panel h2 {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center title content */
+    gap: 10px;
+    margin-bottom: 25px;
+    font-size: 1.4rem;
+}
+
+/* Success State Styling */
+.notification-panel.success-notification {
+  border-top: 5px solid var(--success-color);
+}
+.notification-panel.success-notification #notificationTitle {
+  color: var(--success-color);
+}
+.notification-panel.success-notification #notificationIcon {
+  /* Icon already set in JS */
+}
+
+/* Error State Styling */
+.notification-panel.error-notification {
+  border-top: 5px solid var(--error-color);
+}
+.notification-panel.error-notification #notificationTitle {
+  color: var(--error-color);
+}
+.notification-panel.error-notification #notificationIcon {
+ /* Icon already set in JS */
+}
+
+
+.notification-details {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left; /* Align details to the left */
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.95rem;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #ccc;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 10px;
+}
+
+.detail-label i {
+    opacity: 0.7;
+}
+
+.detail-value {
+    color: #fff;
+    font-weight: 600;
+    word-break: break-all; /* Break long UIDs */
+    text-align: right; /* Align values to the right */
+}
+
+/* Specific value styling */
+#notificationAmount {
+    color: #ffcc00; /* Highlight amount */
+}
+
+#notificationTimestamp {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+#notificationSenderInfo,
+#notificationRecipientInfo {
+     max-width: 200px; /* Limit width to prevent overflow */
+     overflow: hidden;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+     display: inline-block; /* Needed for ellipsis */
+     vertical-align: middle;
+}
+
+
+.notification-error-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    color: var(--error-color); /* Ensure error color */
+    padding: 10px;
+    background: rgba(255, 59, 48, 0.1); /* Light red background */
+    border-radius: 8px;
+    min-height: 0; /* Override default error message min-height */
+}
+
+.notification-confirm-btn {
+  width: 60%;
+  margin: 0 auto; /* Center the button */
+  display: block; /* Ensure it takes full width within its constraints */
+}
+
+.notification-panel.success-notification .notification-confirm-btn {
+     background: linear-gradient(135deg, var(--success-color), #2aa33a);
+}
+.notification-panel.success-notification .notification-confirm-btn:hover {
+     background: linear-gradient(135deg, #5ef074, var(--success-color));
+}
+
+.notification-panel.error-notification .notification-confirm-btn {
+     background: linear-gradient(135deg, var(--error-color), #c02d23);
+}
+.notification-panel.error-notification .notification-confirm-btn:hover {
+      background: linear-gradient(135deg, #ff5c52, var(--error-color));
+}
+/* END: Added Notification Modal Styles */
+
+
 @media (max-width: 992px) {
   .game-header {
     flex-direction: column;
@@ -1637,17 +1764,13 @@ button {
     font-size: 2rem;
   }
 
-#authStatus {
-  display: flex;
-  align-items: center; /* Keep items vertically aligned */
-  gap: 15px;
-}
-
-.logged-in-view {
+ .logged-in-view {
     display: flex; /* Use flex for the logged-in view as well */
     align-items: center;
     gap: 15px; /* Keep consistent gap */
 }
+
+} /* Closing bracket for @media (max-width: 768px) */
 
 
 @media (max-width: 576px) {
@@ -1717,7 +1840,8 @@ button {
       font-size: 0.9rem;
   }
 
-}
+} /* Closing bracket for @media (max-width: 576px) */
+
 
 @keyframes win-animation {
   0% { transform: scale(1); }

@@ -1,3 +1,5 @@
+// --- START OF FILE script.js ---
+
 const SERVER_URL = "__SERVER_URL__";
 
 const firebaseConfig = {
@@ -132,6 +134,20 @@ const recipientUidInput = document.getElementById('recipientUidInput');
 const transferAmountInput = document.getElementById('transferAmountInput');
 const transferErrorMsg = document.getElementById('transferErrorMsg');
 const confirmTransferBtn = document.getElementById('confirmTransferBtn');
+// Added for Notification Modal
+const transferNotificationModal = document.getElementById('transferNotificationModal');
+const transferNotificationPanel = document.getElementById('transferNotificationPanel');
+const notificationTitle = document.getElementById('notificationTitle').querySelector('span');
+const notificationIcon = document.getElementById('notificationIcon');
+const notificationSuccessDetails = document.getElementById('notificationSuccessDetails');
+const notificationErrorDetails = document.getElementById('notificationErrorDetails');
+const notificationSenderInfo = document.getElementById('notificationSenderInfo');
+const notificationRecipientInfo = document.getElementById('notificationRecipientInfo');
+const notificationAmount = document.getElementById('notificationAmount');
+const notificationTimestamp = document.getElementById('notificationTimestamp');
+const notificationErrorMessage = document.getElementById('notificationErrorMessage');
+const closeNotificationBtnX = document.getElementById('closeNotificationBtnX');
+const closeNotificationBtnConfirm = document.getElementById('closeNotificationBtnConfirm');
 
 
 let currentUser = null;
@@ -269,7 +285,7 @@ function updateHeaderDisplay() {
         showElement(loggedOutView);
         hideElement(loggedInView);
         if(logoutBtn) logoutBtn.style.display = 'none';
-        if(transferPointsBtn) hideElement(transferPointsBtn); // Hide for guests
+        if(transferPointsBtn) hideElement(transferPointsBtn);
     } else {
         hideElement(loggedOutView);
         showElement(loggedInView);
@@ -279,8 +295,8 @@ function updateHeaderDisplay() {
 
         if (transferPointsBtn) {
             showElement(transferPointsBtn);
-            transferPointsBtn.disabled = false; 
-            transferPointsBtn.title = "Chuyển/Nhận điểm"; 
+            transferPointsBtn.disabled = false;
+            transferPointsBtn.title = "Chuyển/Nhận điểm";
         }
     }
 }
@@ -500,13 +516,92 @@ async function restartGame() {
 function disableBettingUI() { isBettingAllowed = false; updateBettingUIAccess(); }
 function resetBetState() { currentBetState = { choice: null, amount: 0, confirmed: false }; if(currentBetMessageEl) currentBetMessageEl.textContent = ''; if(currentBetMessageEl) currentBetMessageEl.className = ''; }
 
+function formatTimestamp(timestampMs) {
+    if (!timestampMs) return 'N/A';
+    const date = new Date(timestampMs);
+    return date.toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+}
+
+function showTransferNotification(isSuccess, data) {
+    if (!transferNotificationModal || !transferNotificationPanel || !notificationTitle || !notificationIcon ||
+        !notificationSuccessDetails || !notificationErrorDetails || !notificationErrorMessage) {
+        console.error("Notification modal elements not found!");
+        // Fallback to simple alert
+        if (isSuccess) {
+            alert(`Chuyển thành công ${data?.amountSent?.toLocaleString()} điểm!`);
+        } else {
+            alert(`Lỗi chuyển điểm: ${data?.message || 'Lỗi không xác định'}`);
+        }
+        return;
+    }
+
+    // Reset panel classes
+    transferNotificationPanel.classList.remove('success-notification', 'error-notification');
+
+    if (isSuccess) {
+        transferNotificationPanel.classList.add('success-notification');
+        notificationIcon.className = 'fas fa-check-circle';
+        notificationTitle.textContent = 'Giao Dịch Thành Công';
+
+        // Populate success details
+        const senderText = `${data.senderUsername || 'Người gửi'} (${data.senderUid?.substring(0, 6)}...)`;
+        const recipientText = `${data.recipientUsername || 'Người nhận'} (${data.recipientUid?.substring(0, 6)}...)`;
+
+        if(notificationSenderInfo) notificationSenderInfo.textContent = senderText;
+         if(notificationSenderInfo) notificationSenderInfo.title = data.senderUid; // Add full UID on hover
+        if(notificationRecipientInfo) notificationRecipientInfo.textContent = recipientText;
+         if(notificationRecipientInfo) notificationRecipientInfo.title = data.recipientUid; // Add full UID on hover
+        if(notificationAmount) notificationAmount.textContent = data.amountSent?.toLocaleString() || '?';
+        if(notificationTimestamp) notificationTimestamp.textContent = formatTimestamp(data.timestamp);
+
+        // Show/hide sections
+        notificationSuccessDetails.style.display = 'block';
+        notificationErrorDetails.style.display = 'none';
+
+        // Close the original transfer modal on success
+        closeTransferModal();
+
+    } else { // isError
+        transferNotificationPanel.classList.add('error-notification');
+        notificationIcon.className = 'fas fa-times-circle';
+        notificationTitle.textContent = 'Giao Dịch Thất Bại';
+
+        // Populate error message
+        notificationErrorMessage.textContent = data.message || 'Đã xảy ra lỗi không mong muốn.';
+
+        // Show/hide sections
+        notificationSuccessDetails.style.display = 'none';
+        notificationErrorDetails.style.display = 'block';
+
+        // Re-enable the transfer button in the main modal on error
+        if (transferModal?.style.display === 'flex' && confirmTransferBtn) {
+             confirmTransferBtn.disabled = false;
+             updateTransferModalState(); // Re-evaluate state
+        }
+    }
+
+    showModal(transferNotificationModal);
+}
+
+function closeTransferNotification() {
+    hideModal(transferNotificationModal);
+}
+
+
 function openTransferModal() {
     if (!transferModal || localUser.isGuest) return;
 
     if (currentUserUidDisplay) {
         currentUserUidDisplay.textContent = localUser.userId || 'Không thể tải ID';
     }
-    if (copyUidFeedback) copyUidFeedback.textContent = ''; 
+    if (copyUidFeedback) copyUidFeedback.textContent = '';
 
     // Clear inputs and errors from previous use
     if (recipientUidInput) recipientUidInput.value = '';
@@ -523,54 +618,46 @@ function closeTransferModal() {
 }
 
 function updateTransferModalState() {
-    // Ensure elements exist
     if (!confirmTransferBtn || !transferAmountInput || !recipientUidInput || !transferErrorMsg) return;
 
     const canSendBase = localUser.isVerified && localUser.isSuperVerified;
     const recipientUid = recipientUidInput.value.trim();
     const amount = parseInt(transferAmountInput.value, 10);
-    const minPointsRequired = 500; // Points sender must have left AFTER transfer
+    const minPointsRequired = 500;
     const minTransferAmount = 50;
 
     let error = '';
     let isButtonEnabled = false;
-    let areInputsEnabled = canSendBase; // Inputs are enabled only if base requirements met
+    let areInputsEnabled = canSendBase;
 
     if (!canSendBase) {
         error = 'Bạn không đủ điều kiện để gửi điểm (Cần Super Verified & Xác thực Email). Bạn chỉ có thể nhận điểm.';
         isButtonEnabled = false;
     } else {
-        // Only perform further checks if user is eligible to send
         if (localUser.points < minPointsRequired + minTransferAmount) {
              error = `Bạn cần ít nhất ${minPointsRequired + minTransferAmount} điểm (${minPointsRequired} điểm còn lại + ${minTransferAmount} điểm tối thiểu) để bắt đầu chuyển.`;
         } else if (!recipientUid) {
-            // No error message here initially, let user type
+             // No error initially
         } else if (recipientUid === localUser.userId) {
              error = 'Bạn không thể tự chuyển điểm cho chính mình.';
         } else if (isNaN(amount) || amount < minTransferAmount) {
-            // Allow button enable if UID is valid, even if amount is invalid initially
-             if(recipientUid) isButtonEnabled = true; // Enable button if UID is entered
-             if (transferAmountInput.value && (isNaN(amount) || amount < minTransferAmount)) { // Only show amount error if user typed something invalid
+             if(recipientUid) isButtonEnabled = true;
+             if (transferAmountInput.value && (isNaN(amount) || amount < minTransferAmount)) {
                 error = `Số điểm chuyển tối thiểu là ${minTransferAmount}.`;
-                isButtonEnabled = false; // Disable button again if amount is invalid
+                isButtonEnabled = false;
              }
         } else if (amount > localUser.points - minPointsRequired) {
             error = `Bạn chỉ có thể chuyển tối đa ${localUser.points - minPointsRequired} điểm (để còn lại ${minPointsRequired}).`;
         } else {
-            // All checks passed for enabling the button
             isButtonEnabled = true;
         }
     }
 
-    // Set error message
     transferErrorMsg.textContent = error;
-    // Disable/Enable inputs based on base eligibility
     recipientUidInput.disabled = !areInputsEnabled;
     transferAmountInput.disabled = !areInputsEnabled;
-    // Disable/Enable button based on detailed checks AND base eligibility
     confirmTransferBtn.disabled = !isButtonEnabled || !areInputsEnabled;
 
-    // Add placeholder text if inputs are disabled
      if (!areInputsEnabled) {
         recipientUidInput.placeholder = 'Không đủ điều kiện gửi';
         transferAmountInput.placeholder = 'Không đủ điều kiện gửi';
@@ -725,36 +812,22 @@ function setupSocketListeners() {
          console.log('Transfer success:', data);
          localUser.points = data.newPoints;
          updatePointsDisplay();
-         if (transferModal?.style.display === 'flex') {
-              if(transferErrorMsg) {
-                  transferErrorMsg.textContent = `Chuyển thành công ${data.amountSent.toLocaleString()} điểm đến ${data.recipientUsername || data.recipientUid}.`;
-                  transferErrorMsg.style.color = 'var(--success-color)';
-              }
-              if (recipientUidInput) recipientUidInput.value = '';
-              if (transferAmountInput) transferAmountInput.value = '';
-              if (confirmTransferBtn) confirmTransferBtn.disabled = true;
-         } else {
-              showTemporaryMessage(resultMessageEl, `Đã chuyển ${data.amountSent.toLocaleString()} điểm.`, 'win', 4000);
-         }
-          updateTransferModalState();
+         showTransferNotification(true, {
+              senderUid: data.senderUid,
+              senderUsername: data.senderUsername,
+              recipientUid: data.recipientUid,
+              recipientUsername: data.recipientUsername,
+              amountSent: data.amountSent,
+              timestamp: data.timestamp || Date.now()
+         });
      });
      socket.on('transferError', (message) => {
          console.error('Transfer Error from server:', message);
-         if (transferModal?.style.display === 'flex') {
-              if(transferErrorMsg) {
-                 transferErrorMsg.textContent = message;
-                 transferErrorMsg.style.color = 'var(--error-color)';
-              }
-              if (confirmTransferBtn) confirmTransferBtn.disabled = false;
-              updateTransferModalState();
-         } else {
-              showTemporaryMessage(resultMessageEl, `Lỗi chuyển điểm: ${message}`, 'loss', 5000);
-         }
+         showTransferNotification(false, { message: message });
      });
      socket.on('pointsReceived', (data) => {
          console.log('Points received:', data);
-         showTemporaryMessage(resultMessageEl, `Bạn nhận được ${data.amountReceived.toLocaleString()} điểm từ ${data.senderUsername}!`, 'win', 5000);
-         // Point updates are handled by 'userUpdate'
+         showTemporaryMessage(resultMessageEl, `Bạn nhận được ${data.amountReceived.toLocaleString()} điểm từ ${data.senderUsername || 'Người chơi'}!`, 'win', 5000);
      });
 }
 
@@ -780,6 +853,11 @@ function initializeGame() {
     if(confirmTransferBtn) confirmTransferBtn.addEventListener('click', handleConfirmTransfer);
     if(recipientUidInput) recipientUidInput.addEventListener('input', updateTransferModalState);
     if(transferAmountInput) transferAmountInput.addEventListener('input', updateTransferModalState);
+
+    // Added Listeners for Notification Modal
+    if(closeNotificationBtnX) closeNotificationBtnX.addEventListener('click', closeTransferNotification);
+    if(closeNotificationBtnConfirm) closeNotificationBtnConfirm.addEventListener('click', closeTransferNotification);
+    if(transferNotificationModal) transferNotificationModal.addEventListener('click', (event) => { if (event.target === transferNotificationModal) closeTransferNotification(); });
 
     setupSocketListeners(); isGameInitialized = true; console.log("Game Initialized. Waiting for server connection and state..."); if(sessionStatusEl) sessionStatusEl.textContent = "Đang kết nối server... (tải lại trang nếu đợi quá 1 phút)"; disableBettingUI(); if(cancelBetBtn) cancelBetBtn.disabled = true;
 }
@@ -844,3 +922,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (entryWarningModal) showModal(entryWarningModal);
 });
+// --- END OF FILE script.js ---
