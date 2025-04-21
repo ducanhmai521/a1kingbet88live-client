@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A1KingBET88 - Tài Xỉu (Live)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="entryWarningModal" class="modal-overlay show">
+        <div class="modal-panel warning-panel">
+             <h2><i class="fas fa-exclamation-triangle"></i> A1KingBET88 Thông Báo</h2>
+             <p>
+                 Trang web được tạo ra nhằm mục đích mô phỏng các game Tài Xỉu online nhằm mục đích <strong>giải trí và giáo dục</strong>.<br>
+                 Web không nhằm mục đích cổ xúy cho các hành vi đánh bạc online vi phạm pháp luật.<br>
+                 <strong>Hãy tránh xa các hình thức cờ bạc online vi phạm pháp luật!</strong>
+                 <br><br>
+                 Bằng việc bấm nút phía dưới, <strong>bạn đồng ý rằng bạn đã đủ nhận thức và chỉ sử dụng trang web đúng với mục đích ban đầu!</strong>
+                 <br><br>
+                 Máy chủ của mình sẽ ngắt nếu trong 15 phút không có lượt truy cập nên <strong>nếu web báo lỗi kết nối server, hãy đợi 1 phút và thử lại</strong>.
+             </p>
+             <button id="acceptWarningBtn">Tôi đã đọc và đồng ý</button>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-panel auth-panel">
+             <h2><i class="fas fa-user-check"></i> A1KingBET88</h2>
+             <p>Đăng nhập hoặc Đăng ký để lưu điểm, chat, xem lịch sử! Hoặc tiếp tục mà không cần tài khoản.</p>
+             <div class="auth-tabs">
+                 <button class="tab-link active" data-tab="login">Đăng nhập</button>
+                 <button class="tab-link" data-tab="register">Đăng ký</button>
+             </div>
+             <div id="loginTab" class="auth-tab-content active">
+                 <h3>Đăng nhập</h3>
+                 <div class="setting-item"><label for="loginEmail">Email:</label><input type="email" id="loginEmail" placeholder="Nhập email"></div>
+                   <div class="setting-item password-input-wrapper">
+     <label for="loginPassword">Mật khẩu:</label>
+     <input type="password" id="loginPassword" placeholder="Nhập mật khẩu">
+     <button type="button" class="toggle-password" data-target="loginPassword" title="Hiện/Ẩn mật khẩu">
+         <i class="fas fa-eye"></i>
+     </button>
+ </div>
+                 <p id="loginError" class="error-message"></p><button id="loginBtn" class="auth-action-btn">Đăng nhập</button>
+             </div>
+             <div id="registerTab" class="auth-tab-content">
+                 <h3>Đăng ký</h3>
+                  <div class="setting-item"><label for="registerUsername">Tên hiển thị:</label><input type="text" id="registerUsername" maxlength="15" placeholder="Tên người chơi (tối đa 15 ký tự)"></div>
+                 <div class="setting-item"><label for="registerEmail">Email:</label><input type="email" id="registerEmail" placeholder="Nhập email hợp lệ"></div>
+ <div class="setting-item password-input-wrapper">
+     <label for="registerPassword">Mật khẩu:</label>
+     <input type="password" id="registerPassword" placeholder="Ít nhất 6 ký tự">
+     <button type="button" class="toggle-password" data-target="registerPassword" title="Hiện/Ẩn mật khẩu">
+         <i class="fas fa-eye"></i>
+     </button>
+ </div>
+                 <p id="registerError" class="error-message"></p><button id="registerBtn" class="auth-action-btn">Đăng ký</button>
+             </div>
+             <button id="playGuestBtn" class="guest-btn">Chơi không cần đăng nhập</button>
+        </div>
+    </div>
+
+    <div id="congratsModal" class="modal-overlay">
+         <div class="modal-panel congrats-panel">
+             <button id="closeCongratsBtn" class="close-btn">×</button>
+             <h2>🎉 Chúc Mừng! 🎉</h2>
+             <p>Bạn đã đạt <strong>40000</strong> điểm hoặc hơn!</p>
+             <p>Phần thưởng đặc biệt dành cho người chơi có ID:</p>
+             <p class="congrats-uid" id="congratsUid">USER_ID_PLACEHOLDER</p>
+             <p>Hãy liên hệ Cáo để kiểm tra nhận thưởng. Đến khi nhận thưởng thành công, đừng để điểm tụt xuống dưới 40000.</p>
+             <button id="closeCongratsBtnConfirm" class="control-button">OK</button>
+         </div>
+     </div>
+
+    <div class="game-wrapper" style="display: none;">
+        <div class="game-header">
+             <div id="authStatus">
+                 <div class="logged-out-view">
+                     <button id="showAuthModalBtn" class="auth-link-btn">Đăng nhập / Đăng ký</button>
+                 </div>
+                 <div class="logged-in-view" style="display: none;">
+                      <div class="user-info">
+                         <i class="fas fa-user-circle avatar" id="currentUserAvatar"></i>
+                         <span class="username" id="currentUsername"></span>
+                      </div>
+                 </div>
+                 <span class="points-display">Điểm: <span id="userPoints">0</span></span>
+             </div>
+             <h1 class="game-title desktop-game-title">A1KingBET88</h1>
+            <div class="header-buttons">
+                <button id="toggleMusicBtn" title="Tắt/Bật nhạc"><i class="fas fa-volume-up"></i></button>
+                <button id="infoBtn" title="Thông tin"><i class="fas fa-info-circle"></i></button>
+                <button id="toggleHistoryBtn" title="Lịch sử chi tiết"><i class="fas fa-history"></i></button>
+                <button id="settingsBtn" title="Cài đặt"><i class="fas fa-cog"></i></button>
+                <button id="logoutBtn" class="auth-link-btn logout-btn" title="Đăng xuất" style="display: none;"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+
+         <div class="main-game-area">
+             <h2 class="mobile-game-title">A1KingBET88</h2>
+             <div class="session-info">
+                 <p class="disclaimer-message">Đây là trang web mô phỏng nhắm mục đích giải trí/giáo dục, không hỗ trợ nạp/rút tiền. Hãy cảnh giác, tốt hơn là tránh xa những hình thức cờ bạc online!</p>
+                 <span id="sessionStatus">Đang kết nối...</span>
+             </div>
+             <div class="betting-zone">
+                 <div class="bet-section tai-section">
+                     <div class="bet-title">TÀI</div>
+                     <button id="betTai" class="bet-button">Đặt Tài</button>
+                 </div>
+                <div class="center-display" id="centerDisplay">
+                    <div class="center-content-wrapper">
+                        <div id="timerArea">
+                            <div class="timer-label" id="timerLabel">Thời gian cược</div>
+                            <div class="timer-value" id="timer">--</div>
+                        </div>
+                        <div id="resultArea" style="visibility: hidden;">
+                            <div class="dice-container-results">
+                                <span class="dice" id="dice1">?</span>
+                                <span class="dice" id="dice2">?</span>
+                                <span class="dice" id="dice3">?</span>
+                            </div>
+                            <div class="result-sum" id="diceSum">?</div>
+                            <div class="result-outcome" id="gameOutcome">?</div>
+                        </div>
+                        <div id="resultCover" style="display: none;">
+                            <i class="fas fa-hand-paper"></i>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bet-section xiu-section">
+                     <div class="bet-title">XỈU</div>
+                     <button id="betXiu" class="bet-button">Đặt Xỉu</button>
+                 </div>
+             </div>
+             <div class="history-row" id="historyRow"><span>Lịch sử gần nhất:</span></div>
+             <div class="betting-controls">
+                  <div class="bet-input-group"><label for="betAmount">Điểm cược:</label><input type="number" id="betAmount" placeholder="Nhập điểm" min="1"></div>
+                  <button id="cancelBetBtn" class="control-button" disabled>Hủy Cược</button>
+                  <p id="currentBetMessage"></p>
+                  <p id="resultMessage"></p>
+                  <button id="skipCountdownBtn" style="display: none;" title="Bỏ qua đếm ngược (Dev)">
+                        Skip
+                  </button>
+             </div>
+         </div>
+            <div class="leaderboard-chat-wrapper">
+            <div class="leaderboard-area" id="leaderboardArea">
+                <h4><i class="fas fa-trophy"></i> Bảng Xếp Hạng</h4>
+                <p class="leaderboard-update-info">Cập nhật mỗi 5 phút</p>
+                <ol id="leaderboardList">
+                    <li>Vui lòng chờ</li>
+                </ol>
+            </div>
+                <div class="chat-area" id="chatArea" style="display: none;">
+                    <h4><i class="fas fa-comments"></i> Chat Trực Tiếp</h4>
+                    <p class="chat-guideline">Vui lòng ứng xử văn minh (cần xác minh tài khoản để chat)</p>
+                    <div class="chat-messages" id="chatMessages">
+                    </div>
+					                <button id="newMessagesIndicator" class="new-message-indicator" style="display: none;">
+                    <i class="fas fa-arrow-down"></i> Tin nhắn mới
+                </button>
+                    <div class="chat-input-area">
+                        <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." maxlength="200" autocomplete="off">
+                        <button id="chatSendBtn" title="Gửi"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+
+        <div id="historyPanelWrapper" class="modal-overlay"> <div id="historyPanel" class="modal-panel"><button id="closeHistoryBtn" class="close-btn">×</button><h2>Lịch Sử Chi Tiết</h2><ul id="historyList"></ul></div></div>
+         <div id="settingsModalWrapper" class="modal-overlay"> <div id="settingsPanel" class="modal-panel"><button id="closeSettingsBtn" class="close-btn">×</button><h2>Cài đặt</h2><div class="setting-item"><label for="newUsernameInput">Tên người chơi:</label><input type="text" id="newUsernameInput" maxlength="15" placeholder="Nhập tên (tối đa 15 ký tự)"></div><div class="setting-item"><label>Ảnh đại diện:</label><div class="avatar-selection" id="avatarSelectionContainer"><button class="avatar-option selected" data-avatar="fas fa-user-circle" title="Người dùng">👤</button><button class="avatar-option" data-avatar="fas fa-cat" title="Mèo">🐱</button><button class="avatar-option" data-avatar="fas fa-dog" title="Chó">🐶</button><button class="avatar-option" data-avatar="fas fa-hippo" title="Hà mã">🦛</button><button class="avatar-option" data-avatar="fas fa-dragon" title="Rồng">🐉</button><button class="avatar-option" data-avatar="fas fa-ghost" title="Ma">👻</button><button class="avatar-option" data-avatar="fas fa-robot" title="Robot">🤖</button><button class="avatar-option" data-avatar="fas fa-frog" title="Ếch">🐸</button><button class="avatar-option" data-avatar="fas fa-poo" title="Cục...">💩</button></div></div><button id="saveSettingsBtn">Lưu Thay Đổi</button><button id="sendVerificationBtn" class="control-button verification-btn" style="display: none; margin-top: 15px;">Gửi Email Xác Thực</button><p id="verificationStatusMessage" class="info-message" style="font-size: 0.85em; text-align: center; margin-top: 5px; color: #aaa; min-height: 1.1em;"></p><hr class="settings-divider"><div id="devPasswordSection"><h4>Cài đặt Nâng cao</h4><div class="setting-item"><label for="devPasswordInput">Mật khẩu:</label><input type="password" id="devPasswordInput" placeholder="Nhập mật khẩu nhà phát triển"><button id="unlockDevBtn">Mở khóa</button></div></div><div id="developerSettingsArea" style="display: none;"><h4>Cài đặt Nhà phát triển</h4><div class="setting-item"><label for="sessionDurationInput">Thời gian phiên (giây):</label><input type="number" id="sessionDurationInput" min="10" max="120" step="1" placeholder="Do server quản lý" disabled><small>(Do server quản lý)</small></div><div class="setting-item dev-input-button-group"><label for="devSetPointsInput">Đặt điểm:</label><input type="number" id="devSetPointsInput" placeholder="Nhập điểm"><button id="devSetPointsBtn">Đặt</button></div><div class="setting-item"><label>Nhạc nền:</label><button id="skipSongBtn">Bài Kế Tiếp</button></div><div class="setting-item dev-input-button-group">
+    <label for="devSongSelect">Chọn bài:</label>
+    <select id="devSongSelect" style="flex-grow: 1; padding: 5px;">
+        <option value="">-- Chọn bài --</option>
+    </select>
+    <button id="devPlaySongBtn" style="padding: 5px 10px;">Phát</button>
+</div><p class="dev-note">Lưu ý: Skip có thể cần server hỗ trợ.</p></div></div></div>
+         <div id="infoModalWrapper" class="modal-overlay"> <div id="infoPanel" class="modal-panel"><button id="closeInfoBtn" class="close-btn">×</button><h2>Thông Tin</h2><p><strong>A1KingBET88 Live - Trang Tài Xỉu thiết kế đẹp nhất, cam kết không lấy tiền của bạn</strong></p><p>Trang web mô phỏng các trò chơi tài xỉu online, không cổ xúy các hành vi vi phạm pháp luật.</p><p>Được tạo ra bởi Cáo và cộng sự AI của anh ấy.</p><p>Liên hệ: maiducanh@17022008.xyz</p></div></div>
+<div id="gameOverMessage" class="game-over-overlay">
+    <div class="game-over-content">
+        <h2>😢 Xin Chia Buồn! 💸</h2>
+        <p>Bạn đã vỡ nợ rồi, bạn có muốn vay thêm vốn của nhà cái A1KingBET88 không?</p>
+        <p><b>Bạn sẽ không phải trả lãi (hay gốc)!</b></p>
+        <button id="restartGameBtn">Ok, tôi vay.</button>
+    </div>
+</div>
+
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
