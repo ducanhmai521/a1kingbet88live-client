@@ -162,9 +162,55 @@ button {
 
 #authStatus {
   display: flex;
+  flex-grow: 1; /* Allow auth status to take available space */
   align-items: center; /* Keep items vertically aligned */
+  justify-content: flex-start; /* Align content to the start */
   gap: 15px;
 }
+
+/* Styles for the logged-in view container */
+.logged-in-view {
+    display: flex;          /* Use flexbox for horizontal layout */
+    align-items: center;    /* Vertically align items */
+    justify-content: space-between; /* Distribute space: user left, points right */
+    width: 100%;            /* Take full width within #authStatus */
+    gap: 15px;              /* Space between items if needed */
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0; /* Prevent user info from shrinking */
+}
+
+.avatar {
+  font-size: 1.5rem;
+  color: var(--primary-light);
+}
+
+.username {
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap; /* Prevent username wrapping */
+}
+
+.points-display {
+  display: inline-flex; /* Keep as inline-flex */
+  align-items: center;   /* Vertically center the items */
+  gap: 8px;            /* Space between points text and button */
+  background: rgba(0, 0, 0, 0.25);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  color: #ffcc00;
+  margin-left: auto; /* PUSHES points display to the right */
+  flex-shrink: 0; /* Prevent points display from shrinking */
+}
+
 
 .auth-link-btn {
   background: var(--glass-bg);
@@ -181,41 +227,11 @@ button {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.points-display {
-  display: inline-flex; /* Use inline-flex to allow items on the same line like text */
-  align-items: center;   /* Vertically center the items within the container */
-  gap: 8px;            /* Add some space between the points text and the button */
-  background: rgba(0, 0, 0, 0.25);
-  /* Adjust padding slightly if needed for vertical balance */
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-  color: #ffcc00;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.avatar {
-  font-size: 1.5rem;
-  color: var(--primary-light);
-}
-
-.username {
-  font-weight: 600;
-  color: #fff;
-}
-
 .header-buttons {
   display: flex;
   align-items: center;
   gap: 12px;
+   flex-shrink: 0; /* Prevent header buttons from shrinking */
 }
 
 .header-buttons button {
@@ -817,7 +833,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1000; /* Base z-index for modals */
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
@@ -976,13 +992,14 @@ button {
   position: absolute;
   right: 12px;
   top: 50%;
-  transform: translateY(calc(-50% + 10px));
+  transform: translateY(calc(-50% + 10px)); /* Adjusted for label space */
   background: transparent;
   border: none;
   color: #ccc;
   cursor: pointer;
   padding: 5px;
 }
+
 
 .error-message {
   color: var(--error-color);
@@ -1002,37 +1019,45 @@ button {
   margin-top: 10px;
 }
 
+/* START: Styles for Game Over Modal */
 .game-over-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85); /* Slightly darker overlay */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex; /* Changed from none to flex */
+    align-items: center;
+    justify-content: center;
+    z-index: 2000; /* High z-index */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* Added visibility transition */
+}
+
+.game-over-overlay.show { /* Class to show the modal */
+    opacity: 1;
+    visibility: visible;
 }
 
 .game-over-content {
-  background: var(--dark-glass-bg);
-  border-radius: var(--card-border-radius);
-  padding: 30px;
-  max-width: 90%;
-  width: 400px;
-  text-align: center;
-  backdrop-filter: blur(var(--backdrop-blur));
-  -webkit-backdrop-filter: blur(var(--backdrop-blur));
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  animation: bounceIn 0.5s ease;
-  z-index: 2001; /* Above overlay */
+    background: var(--dark-glass-bg);
+    border-radius: var(--card-border-radius);
+    padding: 30px 35px; /* Adjusted padding */
+    max-width: 90%;
+    width: 450px; /* Slightly wider */
+    text-align: center;
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-top: 5px solid var(--secondary-dark); /* Accent border */
+    animation: bounceIn 0.5s ease;
+    z-index: 2001; /* Above overlay */
+    color: var(--text-light); /* Ensure text is light */
 }
 
 @keyframes bounceIn {
@@ -1045,20 +1070,34 @@ button {
   color: var(--secondary-color);
   margin-bottom: 20px;
   font-size: 1.8rem;
+  font-weight: 700;
 }
 
 .game-over-content p {
   margin-bottom: 15px;
-  line-height: 1.6;
+  line-height: 1.7; /* Slightly more spacing */
+  font-size: 1rem; /* Ensure readable size */
+}
+
+.game-over-content p b {
+    color: var(--primary-light); /* Highlight the no-interest part */
 }
 
 #restartGameBtn {
   background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   padding: 12px 30px;
-  margin-top: 20px;
-  width: 80%;
+  margin-top: 25px; /* Increased margin */
+  width: 70%; /* Adjusted width */
   font-size: 1.1rem;
+  font-weight: 600; /* Ensure font weight matches others */
 }
+
+#restartGameBtn:hover { /* Add hover effect consistent with other buttons */
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+}
+/* END: Styles for Game Over Modal */
 
 .congrats-panel {
   border-top: 5px solid var(--success-color);
@@ -1587,10 +1626,16 @@ button {
 
 
 /* START: Added Notification Modal Styles */
+/* Ensure Notification Modal is on top */
+#transferNotificationModal {
+  z-index: 1050; /* Higher than base modal z-index (1000) */
+}
+
 .notification-panel {
   max-width: 480px;
   width: 90%;
   text-align: center; /* Center align content */
+  z-index: 1051; /* Higher than its overlay */
 }
 
 .notification-panel h2 {
@@ -1726,6 +1771,19 @@ button {
     gap: 15px;
   }
 
+   /* Adjust authStatus and logged-in-view for column layout */
+    #authStatus {
+        width: 100%; /* Take full width in column */
+        justify-content: center; /* Center content horizontally */
+    }
+    .logged-in-view {
+        justify-content: center; /* Center items */
+        flex-wrap: wrap; /* Allow items to wrap */
+    }
+    .points-display {
+        margin-left: 0; /* Remove auto margin */
+    }
+
   .desktop-game-title {
     display: none;
   }
@@ -1741,6 +1799,8 @@ button {
 
   .header-buttons {
     margin-top: 10px;
+    width: 100%;
+    justify-content: center; /* Center buttons */
   }
 }
 
@@ -1796,11 +1856,21 @@ button {
     font-size: 2rem;
   }
 
+ /* Adjust header layout for smaller screens if needed */
  .logged-in-view {
-    display: flex; /* Use flex for the logged-in view as well */
-    align-items: center;
-    gap: 15px; /* Keep consistent gap */
-}
+    gap: 10px; /* Reduce gap slightly */
+    /* Flex-wrap might be needed here too depending on screen width */
+ }
+
+ .points-display {
+    font-size: 0.9rem; /* Slightly smaller font */
+    padding: 5px 10px;
+ }
+ .transfer-icon-btn {
+    width: 22px;
+    height: 22px;
+    font-size: 0.75rem;
+ }
 
 } /* Closing bracket for @media (max-width: 768px) */
 
@@ -1819,6 +1889,22 @@ button {
     height: 36px;
     font-size: 1rem;
   }
+
+  /* Further adjust header for very small screens */
+    .logged-in-view {
+        flex-direction: column; /* Stack elements vertically */
+        align-items: center; /* Center items */
+        gap: 8px;
+    }
+    .user-info {
+        /* Centered by parent */
+    }
+    .points-display {
+        margin-left: 0; /* Ensure no left margin */
+    }
+    #authStatus {
+        /* Inherits flex settings */
+    }
 
   .bet-input-group {
     flex-direction: column;
