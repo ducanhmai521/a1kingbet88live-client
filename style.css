@@ -1718,6 +1718,28 @@ button {
 }
 /* END: Notification Modal Styles */
 
+/* Optional styling for the GitHub link in the info panel */
+.github-link-container {
+    margin-top: 10px; /* Add some space above the link */
+    margin-bottom: 10px; /* Add some space below the link */
+}
+
+.github-link-container i.fab.fa-github {
+    margin-right: 6px; /* Space between icon and text */
+    color: #ccc;      /* Give the icon a subtle color */
+    font-size: 1.1em; /* Slightly larger icon */
+}
+
+.info-link {
+    color: #fff; /* White text for the link */
+    text-decoration: none; /* Remove default underline */
+    transition: color 0.2s ease;
+}
+
+.info-link:hover {
+    color: var(--primary-light); /* Change color on hover */
+    text-decoration: underline; /* Add underline on hover */
+}
 
 @media (max-width: 992px) {
   .game-header {
