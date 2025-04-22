@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- START: Added Notification Modal -->
+    <!-- START: Transfer Notification Modal -->
     <div id="transferNotificationModal" class="modal-overlay">
         <div id="transferNotificationPanel" class="modal-panel notification-panel">
             <button id="closeNotificationBtnX" class="close-btn">×</button>
@@ -44,8 +44,9 @@
             <button id="closeNotificationBtnConfirm" class="control-button notification-confirm-btn">Đã Hiểu</button>
         </div>
     </div>
-    <!-- END: Added Notification Modal -->
+    <!-- END: Transfer Notification Modal -->
 
+     <!-- START: Transfer Modal -->
      <div id="transferModal" class="modal-overlay">
          <div class="modal-panel transfer-panel">
               <button id="closeTransferBtn" class="close-btn">×</button>
@@ -85,6 +86,9 @@
               </div>
          </div>
      </div>
+     <!-- END: Transfer Modal -->
+
+    <!-- START: Entry Warning Modal -->
     <div id="entryWarningModal" class="modal-overlay show">
         <div class="modal-panel warning-panel">
              <h2><i class="fas fa-exclamation-triangle"></i> A1KingBET88 Thông Báo</h2>
@@ -100,7 +104,9 @@
              <button id="acceptWarningBtn">Tôi đã đọc và đồng ý</button>
         </div>
     </div>
+    <!-- END: Entry Warning Modal -->
 
+    <!-- START: Auth Modal -->
     <div id="authModal" class="modal-overlay">
         <div class="modal-panel auth-panel">
              <h2><i class="fas fa-user-check"></i> A1KingBET88</h2>
@@ -137,7 +143,9 @@
              <button id="playGuestBtn" class="guest-btn">Chơi không cần đăng nhập</button>
         </div>
     </div>
+    <!-- END: Auth Modal -->
 
+    <!-- START: Congrats Modal -->
     <div id="congratsModal" class="modal-overlay">
          <div class="modal-panel congrats-panel">
              <button id="closeCongratsBtn" class="close-btn">×</button>
@@ -149,6 +157,18 @@
              <button id="closeCongratsBtnConfirm" class="control-button">OK</button>
          </div>
      </div>
+    <!-- END: Congrats Modal -->
+
+    <!-- START: Game Over Modal -->
+    <div id="gameOverMessage" class="modal-overlay game-over-overlay">
+        <div class="modal-panel game-over-content">
+            <h2><i class="fas fa-skull-crossbones"></i> Xin Chia Buồn! 💸</h2>
+            <p>Bạn đã cháy túi rồi! Bạn có muốn "vay" thêm vốn từ nhà cái A1KingBET88 không?</p>
+            <p><b>Đừng lo, bạn sẽ không phải trả lãi (hay gốc) đâu!</b></p>
+            <button id="restartGameBtn" class="control-button restart-button">Ok, tôi vay.</button>
+        </div>
+    </div>
+    <!-- END: Game Over Modal -->
 
     <div class="game-wrapper" style="display: none;">
         <div class="game-header">
@@ -156,17 +176,20 @@
                  <div class="logged-out-view">
                      <button id="showAuthModalBtn" class="auth-link-btn">Đăng nhập / Đăng ký</button>
                  </div>
+                 <!-- START: Modified logged-in view structure -->
                  <div class="logged-in-view" style="display: none;">
                       <div class="user-info">
                          <i class="fas fa-user-circle avatar" id="currentUserAvatar"></i>
                          <span class="username" id="currentUsername"></span>
                       </div>
-                     <span class="points-display">Điểm: <span id="userPoints">0</span>
+                     <div class="user-points-actions">
+                         <span class="points-display">Điểm: <span id="userPoints">0</span></span>
                          <button id="transferPointsBtn" class="transfer-icon-btn" title="Chuyển/Nhận điểm" style="display: none;">
                              <i class="fas fa-exchange-alt"></i>
                          </button>
-                     </span>
+                     </div>
                  </div>
+                 <!-- END: Modified logged-in view structure -->
              </div>
              <h1 class="game-title desktop-game-title">A1KingBET88</h1>
             <div class="header-buttons">
@@ -257,16 +280,8 @@
     <button id="devPlaySongBtn" style="padding: 5px 10px;">Phát</button>
 </div><p class="dev-note">Lưu ý: Skip có thể cần server hỗ trợ.</p></div></div></div>
          <div id="infoModalWrapper" class="modal-overlay"> <div id="infoPanel" class="modal-panel"><button id="closeInfoBtn" class="close-btn">×</button><h2>Thông Tin</h2><p><strong>A1KingBET88 Live - Trang Tài Xỉu thiết kế đẹp nhất, cam kết không lấy tiền của bạn</strong></p><p>Trang web mô phỏng các trò chơi tài xỉu online, không cổ xúy các hành vi vi phạm pháp luật.</p><p>Được tạo ra bởi Cáo và cộng sự AI của anh ấy.</p><p>Liên hệ: maiducanh@17022008.xyz</p></div></div>
-<div id="gameOverMessage" class="game-over-overlay">
-    <div class="game-over-content">
-        <h2>😢 Xin Chia Buồn! 💸</h2>
-        <p>Bạn đã vỡ nợ rồi, bạn có muốn vay thêm vốn của nhà cái A1KingBET88 không?</p>
-        <p><b>Bạn sẽ không phải trả lãi (hay gốc)!</b></p>
-        <button id="restartGameBtn">Ok, tôi vay.</button>
-    </div>
-</div>
 
-    </div>
+    </div> <!-- End of .game-wrapper -->
 
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
