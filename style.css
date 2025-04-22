@@ -1,3 +1,5 @@
+/* --- START OF FILE style.css --- */
+
 :root {
   --primary-color: #6c63ff;
   --primary-light: #887dff;
@@ -29,14 +31,20 @@
 }
 
 body {
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  background-attachment: fixed;
+  /* REMOVED background gradient and fixed attachment */
+  /* background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); */
+  /* background-attachment: fixed; */
+
+  /* ADDED fallback background color */
+  background-color: #0f0c29;
+
   color: var(--text-light);
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
 }
 
+/* Keep ::before for radial effects */
 body::before {
   content: "";
   position: fixed;
@@ -47,8 +55,23 @@ body::before {
   background-image:
     radial-gradient(circle at 20% 35%, rgba(108, 99, 255, 0.15) 0%, transparent 25%),
     radial-gradient(circle at 75% 15%, rgba(255, 107, 107, 0.15) 0%, transparent 20%);
-  z-index: -1;
+  z-index: -1; /* Behind content */
 }
+
+/* ADDED ::after for main fixed linear gradient */
+body::after {
+  content: "";
+  position: fixed; /* Use fixed to attach to viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Apply gradient here */
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  /* NO background-attachment needed */
+  z-index: -2; /* Behind ::before and content */
+}
+
 
 .glass-card {
   background: var(--glass-bg);
@@ -103,6 +126,10 @@ button {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  position: relative; /* Ensure content is above pseudo-elements */
+  z-index: 1; /* Lift above pseudo-elements */
+  /* Ensure no opaque background here */
+  /* background-color: transparent; (if needed) */
 }
 
 .game-header {
@@ -117,6 +144,9 @@ button {
   -webkit-backdrop-filter: blur(var(--backdrop-blur));
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
+  /* Position relative and z-index if needed, but likely covered by game-wrapper */
+  position: relative;
+  z-index: 2;
 }
 
 .game-title {
@@ -812,6 +842,7 @@ button {
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   animation: modalFadeIn 0.3s ease;
+  z-index: 1001; /* Ensure modals are above background pseudo-elements */
 }
 
 @keyframes modalFadeIn {
@@ -1001,6 +1032,7 @@ button {
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   animation: bounceIn 0.5s ease;
+  z-index: 2001; /* Above overlay */
 }
 
 @keyframes bounceIn {
@@ -1921,3 +1953,5 @@ button:focus, input:focus {
 .bet-button, .control-button, input, .modal-panel {
   will-change: transform, opacity;
 }
+
+/* --- END OF FILE style.css --- */
