@@ -1,5 +1,3 @@
-/* --- START OF FILE style.css --- */
-
 :root {
   --primary-color: #6c63ff;
   --primary-light: #887dff;
@@ -31,20 +29,13 @@
 }
 
 body {
-  /* REMOVED background gradient and fixed attachment */
-  /* background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); */
-  /* background-attachment: fixed; */
-
-  /* ADDED fallback background color */
   background-color: #0f0c29;
-
   color: var(--text-light);
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
 }
 
-/* Keep ::before for radial effects */
 body::before {
   content: "";
   position: fixed;
@@ -55,21 +46,18 @@ body::before {
   background-image:
     radial-gradient(circle at 20% 35%, rgba(108, 99, 255, 0.15) 0%, transparent 25%),
     radial-gradient(circle at 75% 15%, rgba(255, 107, 107, 0.15) 0%, transparent 20%);
-  z-index: -1; /* Behind content */
+  z-index: -1;
 }
 
-/* ADDED ::after for main fixed linear gradient */
 body::after {
   content: "";
-  position: fixed; /* Use fixed to attach to viewport */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  /* Apply gradient here */
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  /* NO background-attachment needed */
-  z-index: -2; /* Behind ::before and content */
+  z-index: -2;
 }
 
 
@@ -115,7 +103,7 @@ button {
 }
 
 .control-button:disabled, button:disabled {
-  background: var(--neutral-color) !important; /* Added !important */
+  background: var(--neutral-color) !important;
   cursor: not-allowed;
   opacity: 0.6;
   transform: none;
@@ -126,15 +114,12 @@ button {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  position: relative; /* Ensure content is above pseudo-elements */
-  z-index: 1; /* Lift above pseudo-elements */
-  /* Ensure no opaque background here */
-  /* background-color: transparent; (if needed) */
+  position: relative;
+  z-index: 1;
 }
 
 .game-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-bottom: var(--section-spacing);
   padding: 15px 20px;
@@ -144,44 +129,30 @@ button {
   -webkit-backdrop-filter: blur(var(--backdrop-blur));
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  /* Position relative and z-index if needed, but likely covered by game-wrapper */
   position: relative;
   z-index: 2;
 }
 
-.game-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  background: linear-gradient(to right, #fff, #aaa);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: 1px;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-}
-
 #authStatus {
   display: flex;
-  flex-grow: 1; /* Allow auth status to take available space */
-  align-items: center; /* Keep items vertically aligned */
-  justify-content: flex-start; /* Align content to the start */
-  gap: 15px;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: auto;
 }
 
-/* Styles for the logged-in view container */
 .logged-in-view {
-    display: flex;          /* Use flexbox for horizontal layout */
-    align-items: center;    /* Vertically align items */
-    justify-content: space-between; /* Distribute space: user left, points right */
-    width: 100%;            /* Take full width within #authStatus */
-    gap: 15px;              /* Space between items if needed */
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 10px;
+    width: auto;
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0; /* Prevent user info from shrinking */
+  flex-shrink: 0;
 }
 
 .avatar {
@@ -192,13 +163,13 @@ button {
 .username {
   font-weight: 600;
   color: #fff;
-  white-space: nowrap; /* Prevent username wrapping */
+  white-space: nowrap;
 }
 
 .points-display {
-  display: inline-flex; /* Keep as inline-flex */
-  align-items: center;   /* Vertically center the items */
-  gap: 8px;            /* Space between points text and button */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: rgba(0, 0, 0, 0.25);
   padding: 6px 12px;
   border-radius: 20px;
@@ -207,31 +178,30 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
   color: #ffcc00;
-  margin-left: auto; /* PUSHES points display to the right */
-  flex-shrink: 0; /* Prevent points display from shrinking */
+  flex-shrink: 0;
 }
 
-
-.auth-link-btn {
-  background: var(--glass-bg);
-  color: var(--text-light);
-  padding: 8px 16px;
-  border-radius: var(--button-border-radius);
-  font-size: 0.9rem;
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(var(--backdrop-blur));
-  -webkit-backdrop-filter: blur(var(--backdrop-blur));
-}
-
-.auth-link-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+.desktop-game-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #fff, #aaa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  flex-grow: 1;
+  text-align: center;
+  margin: 0 15px;
+  white-space: nowrap;
 }
 
 .header-buttons {
   display: flex;
   align-items: center;
   gap: 12px;
-   flex-shrink: 0; /* Prevent header buttons from shrinking */
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .header-buttons button {
@@ -249,6 +219,21 @@ button {
   backdrop-filter: blur(var(--backdrop-blur));
   -webkit-backdrop-filter: blur(var(--backdrop-blur));
   transition: all 0.2s ease;
+}
+
+.auth-link-btn {
+  background: var(--glass-bg);
+  color: var(--text-light);
+  padding: 8px 16px;
+  border-radius: var(--button-border-radius);
+  font-size: 0.9rem;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+}
+
+.auth-link-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .header-buttons button:hover {
@@ -309,7 +294,7 @@ button {
   display: flex;
   justify-content: space-between;
   gap: 15px;
-  align-items: center; /* Changed from stretch */
+  align-items: center;
 }
 
 .bet-section {
@@ -317,7 +302,7 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 15px; /* Reduced vertical padding */
+  padding: 15px;
   border-radius: var(--card-border-radius);
   backdrop-filter: blur(var(--backdrop-blur));
   -webkit-backdrop-filter: blur(var(--backdrop-blur));
@@ -375,7 +360,7 @@ button {
   font-weight: 700;
   letter-spacing: 2px;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-  margin-bottom: 5px; /* Add slight margin below title */
+  margin-bottom: 5px;
 }
 
 .tai-section .bet-title {
@@ -397,8 +382,8 @@ button {
   backdrop-filter: blur(var(--backdrop-blur));
   -webkit-backdrop-filter: blur(var(--backdrop-blur));
   width: 80%;
-  margin-top: 20px; /* Reduced margin */
-  margin-bottom: 5px; /* Reduced margin */
+  margin-top: 20px;
+  margin-bottom: 5px;
   transition: all 0.2s ease;
 }
 
@@ -441,7 +426,7 @@ button {
   align-items: center;
   background: var(--dark-glass-bg);
   border-radius: var(--card-border-radius);
-  padding: 15px; /* Reduced padding */
+  padding: 15px;
   position: relative;
   backdrop-filter: blur(var(--backdrop-blur));
   -webkit-backdrop-filter: blur(var(--backdrop-blur));
@@ -455,7 +440,7 @@ button {
   justify-content: center;
   align-items: center;
   width: 100%;
-  flex-grow: 1; /* Keep this to center content vertically */
+  flex-grow: 1;
   text-align: center;
 }
 
@@ -833,7 +818,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000; /* Base z-index for modals */
+  z-index: 1000;
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
@@ -858,7 +843,7 @@ button {
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   animation: modalFadeIn 0.3s ease;
-  z-index: 1001; /* Ensure modals are above background pseudo-elements */
+  z-index: 1001;
 }
 
 @keyframes modalFadeIn {
@@ -992,7 +977,7 @@ button {
   position: absolute;
   right: 12px;
   top: 50%;
-  transform: translateY(calc(-50% + 10px)); /* Adjusted for label space */
+  transform: translateY(calc(-50% + 10px));
   background: transparent;
   border: none;
   color: #ccc;
@@ -1019,26 +1004,25 @@ button {
   margin-top: 10px;
 }
 
-/* START: Styles for Game Over Modal */
 .game-over-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85); /* Slightly darker overlay */
+    background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    display: flex; /* Changed from none to flex */
+    display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2000; /* High z-index */
+    z-index: 2000;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease; /* Added visibility transition */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.game-over-overlay.show { /* Class to show the modal */
+.game-over-overlay.show {
     opacity: 1;
     visibility: visible;
 }
@@ -1046,18 +1030,18 @@ button {
 .game-over-content {
     background: var(--dark-glass-bg);
     border-radius: var(--card-border-radius);
-    padding: 30px 35px; /* Adjusted padding */
+    padding: 30px 35px;
     max-width: 90%;
-    width: 450px; /* Slightly wider */
+    width: 450px;
     text-align: center;
     backdrop-filter: blur(var(--backdrop-blur));
     -webkit-backdrop-filter: blur(var(--backdrop-blur));
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
-    border-top: 5px solid var(--secondary-dark); /* Accent border */
+    border-top: 5px solid var(--secondary-dark);
     animation: bounceIn 0.5s ease;
-    z-index: 2001; /* Above overlay */
-    color: var(--text-light); /* Ensure text is light */
+    z-index: 2001;
+    color: var(--text-light);
 }
 
 @keyframes bounceIn {
@@ -1075,29 +1059,28 @@ button {
 
 .game-over-content p {
   margin-bottom: 15px;
-  line-height: 1.7; /* Slightly more spacing */
-  font-size: 1rem; /* Ensure readable size */
+  line-height: 1.7;
+  font-size: 1rem;
 }
 
 .game-over-content p b {
-    color: var(--primary-light); /* Highlight the no-interest part */
+    color: var(--primary-light);
 }
 
 #restartGameBtn {
   background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   padding: 12px 30px;
-  margin-top: 25px; /* Increased margin */
-  width: 70%; /* Adjusted width */
+  margin-top: 25px;
+  width: 70%;
   font-size: 1.1rem;
-  font-weight: 600; /* Ensure font weight matches others */
+  font-weight: 600;
 }
 
-#restartGameBtn:hover { /* Add hover effect consistent with other buttons */
+#restartGameBtn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
 }
-/* END: Styles for Game Over Modal */
 
 .congrats-panel {
   border-top: 5px solid var(--success-color);
@@ -1469,11 +1452,11 @@ button {
     border-radius: 15px;
     cursor: pointer;
     font-size: 0.85em;
-    position: absolute; /* Position relative to chat-area */
-    bottom: 70px; /* Adjust as needed to sit above input */
+    position: absolute;
+    bottom: 70px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10; /* Ensure it's above messages if overlap occurs */
+    z-index: 10;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     transition: opacity 0.3s ease;
     opacity: 1;
@@ -1483,7 +1466,6 @@ button {
     background-color: var(--primary-light);
 }
 
-/* Transfer Icon Button */
 .transfer-icon-btn {
   background: rgba(255, 255, 255, 0.1);
   color: var(--primary-light);
@@ -1515,7 +1497,6 @@ button {
 }
 
 
-/* Transfer Modal Styles */
 .transfer-panel {
   max-width: 550px;
   width: 90%;
@@ -1606,7 +1587,7 @@ button {
 }
 
 .superverified-text {
-    color: #ffcc00; /* Gold color for emphasis */
+    color: #ffcc00;
     font-weight: bold;
 }
 
@@ -1621,33 +1602,29 @@ button {
 }
 
 .transfer-action-btn:disabled {
-    background: var(--neutral-color) !important; /* Ensure disabled style overrides */
+    background: var(--neutral-color) !important;
 }
 
-
-/* START: Added Notification Modal Styles */
-/* Ensure Notification Modal is on top */
 #transferNotificationModal {
-  z-index: 1050; /* Higher than base modal z-index (1000) */
+  z-index: 1050;
 }
 
 .notification-panel {
   max-width: 480px;
   width: 90%;
-  text-align: center; /* Center align content */
-  z-index: 1051; /* Higher than its overlay */
+  text-align: center;
+  z-index: 1051;
 }
 
 .notification-panel h2 {
     display: flex;
     align-items: center;
-    justify-content: center; /* Center title content */
+    justify-content: center;
     gap: 10px;
     margin-bottom: 25px;
     font-size: 1.4rem;
 }
 
-/* Success State Styling */
 .notification-panel.success-notification {
   border-top: 5px solid var(--success-color);
 }
@@ -1655,10 +1632,9 @@ button {
   color: var(--success-color);
 }
 .notification-panel.success-notification #notificationIcon {
-  /* Icon already set in JS */
+
 }
 
-/* Error State Styling */
 .notification-panel.error-notification {
   border-top: 5px solid var(--error-color);
 }
@@ -1666,9 +1642,8 @@ button {
   color: var(--error-color);
 }
 .notification-panel.error-notification #notificationIcon {
- /* Icon already set in JS */
-}
 
+}
 
 .notification-details {
     background: rgba(0, 0, 0, 0.15);
@@ -1676,7 +1651,7 @@ button {
     padding: 15px;
     margin-bottom: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: left; /* Align details to the left */
+    text-align: left;
 }
 
 .detail-row {
@@ -1707,13 +1682,12 @@ button {
 .detail-value {
     color: #fff;
     font-weight: 600;
-    word-break: break-all; /* Break long UIDs */
-    text-align: right; /* Align values to the right */
+    word-break: break-all;
+    text-align: right;
 }
 
-/* Specific value styling */
 #notificationAmount {
-    color: #ffcc00; /* Highlight amount */
+    color: #ffcc00;
 }
 
 #notificationTimestamp {
@@ -1723,30 +1697,29 @@ button {
 
 #notificationSenderInfo,
 #notificationRecipientInfo {
-     max-width: 200px; /* Limit width to prevent overflow */
+     max-width: 200px;
      overflow: hidden;
      text-overflow: ellipsis;
      white-space: nowrap;
-     display: inline-block; /* Needed for ellipsis */
+     display: inline-block;
      vertical-align: middle;
 }
-
 
 .notification-error-text {
     font-size: 1rem;
     line-height: 1.6;
     margin-bottom: 25px;
-    color: var(--error-color); /* Ensure error color */
+    color: var(--error-color);
     padding: 10px;
-    background: rgba(255, 59, 48, 0.1); /* Light red background */
+    background: rgba(255, 59, 48, 0.1);
     border-radius: 8px;
-    min-height: 0; /* Override default error message min-height */
+    min-height: 0;
 }
 
 .notification-confirm-btn {
   width: 60%;
-  margin: 0 auto; /* Center the button */
-  display: block; /* Ensure it takes full width within its constraints */
+  margin: 0 auto;
+  display: block;
 }
 
 .notification-panel.success-notification .notification-confirm-btn {
@@ -1762,8 +1735,6 @@ button {
 .notification-panel.error-notification .notification-confirm-btn:hover {
       background: linear-gradient(135deg, #ff5c52, var(--error-color));
 }
-/* END: Added Notification Modal Styles */
-
 
 @media (max-width: 992px) {
   .game-header {
@@ -1771,17 +1742,19 @@ button {
     gap: 15px;
   }
 
-   /* Adjust authStatus and logged-in-view for column layout */
     #authStatus {
-        width: 100%; /* Take full width in column */
-        justify-content: center; /* Center content horizontally */
+        width: 100%;
+        justify-content: center;
+        margin-right: 0;
+        order: 2;
     }
     .logged-in-view {
-        justify-content: center; /* Center items */
-        flex-wrap: wrap; /* Allow items to wrap */
+        justify-content: center;
+        flex-wrap: wrap;
+        width: auto;
     }
     .points-display {
-        margin-left: 0; /* Remove auto margin */
+        margin-left: 0;
     }
 
   .desktop-game-title {
@@ -1790,6 +1763,8 @@ button {
 
   .mobile-game-title {
     display: block;
+    order: 1;
+    margin: 0;
   }
 
   .leaderboard-chat-wrapper {
@@ -1798,9 +1773,10 @@ button {
   }
 
   .header-buttons {
-    margin-top: 10px;
+    margin-left: 0;
+    order: 3;
     width: 100%;
-    justify-content: center; /* Center buttons */
+    justify-content: center;
   }
 }
 
@@ -1811,7 +1787,7 @@ button {
     justify-content: space-between;
     gap: 10px;
     margin-bottom: 15px;
-    align-items: center; /* Reverted to center for smaller screens */
+    align-items: center;
   }
 
   .center-display {
@@ -1820,7 +1796,7 @@ button {
   }
 
   .center-content-wrapper {
-     /* Styles inherit from base */
+
   }
 
   #skipCountdownBtn {
@@ -1842,7 +1818,7 @@ button {
     padding: 10px 20px;
     font-size: 1rem;
     width: 90%;
-    margin-top: 25px; /* Revert margin for smaller screens */
+    margin-top: 25px;
     margin-bottom: 8px;
   }
 
@@ -1856,14 +1832,13 @@ button {
     font-size: 2rem;
   }
 
- /* Adjust header layout for smaller screens if needed */
  .logged-in-view {
-    gap: 10px; /* Reduce gap slightly */
-    /* Flex-wrap might be needed here too depending on screen width */
+    gap: 10px;
+
  }
 
  .points-display {
-    font-size: 0.9rem; /* Slightly smaller font */
+    font-size: 0.9rem;
     padding: 5px 10px;
  }
  .transfer-icon-btn {
@@ -1872,8 +1847,7 @@ button {
     font-size: 0.75rem;
  }
 
-} /* Closing bracket for @media (max-width: 768px) */
-
+}
 
 @media (max-width: 576px) {
   .game-wrapper {
@@ -1890,20 +1864,19 @@ button {
     font-size: 1rem;
   }
 
-  /* Further adjust header for very small screens */
     .logged-in-view {
-        flex-direction: column; /* Stack elements vertically */
-        align-items: center; /* Center items */
-        gap: 8px;
+        flex-direction: column !important;
+        align-items: center;
+        gap: 5px;
     }
     .user-info {
-        /* Centered by parent */
+
     }
     .points-display {
-        margin-left: 0; /* Ensure no left margin */
+        margin-left: 0;
     }
     #authStatus {
-        /* Inherits flex settings */
+
     }
 
   .bet-input-group {
@@ -1958,8 +1931,7 @@ button {
       font-size: 0.9rem;
   }
 
-} /* Closing bracket for @media (max-width: 576px) */
-
+}
 
 @keyframes win-animation {
   0% { transform: scale(1); }
@@ -2039,5 +2011,3 @@ button:focus, input:focus {
 .bet-button, .control-button, input, .modal-panel {
   will-change: transform, opacity;
 }
-
-/* --- END OF FILE style.css --- */
