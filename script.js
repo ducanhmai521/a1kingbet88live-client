@@ -1,5 +1,3 @@
-// --- START OF FILE script.js ---
-
 const SERVER_URL = "__SERVER_URL__";
 
 const firebaseConfig = {
@@ -153,8 +151,7 @@ let currentUser = null;
 let localUser = { userId: null, username: "Khách", points: 100, avatarClass: 'fas fa-user-ninja', isGuest: true, isVerified: false, isSuperVerified: false, isDev: false };
 let currentBetState = { choice: null, amount: 0, confirmed: false };
 let isBettingAllowed = false;
-let gameHistory = [];
-let serverHistoryCache = [];
+let gameHistory = []; // Holds detailed history locally
 let currentSessionCount = 0;
 let localTimerInterval = null;
 let waitInterval = null;
@@ -165,8 +162,8 @@ let gameStatus = "CONNECTING";
 let isDraggingCover = false; let coverStartX, coverStartY; let coverOffsetX, coverOffsetY;
 
 const MAX_SIMPLE_HISTORY = 15;
-const MAX_LOCAL_HISTORY = 50;
-const MAX_DETAILED_HISTORY_DISPLAY = 20;
+const MAX_LOCAL_HISTORY = 50; // Limit local storage
+const MAX_DETAILED_HISTORY_DISPLAY = 20; // Limit display in panel
 const DEV_PASSWORD = 'nhacaiducanh';
 const CONGRATS_THRESHOLD = 40000;
 const GUEST_INITIAL_POINTS = 100;
@@ -283,8 +280,7 @@ auth.onAuthStateChanged(async (user) => {
         updateChatVisibility();
         if(isGameInitialized) {
             if(chatMessages) chatMessages.innerHTML = '';
-            serverHistoryCache = [];
-            gameHistory = [];
+            gameHistory = []; // Clear local history on logout/guest
             updateSimpleHistoryDisplay();
         }
          if (gameOverMessageEl && gameOverMessageEl.classList.contains('show')) {
@@ -308,8 +304,7 @@ function setupGuestUI() {
     if(developerSettingsArea) hideElement(developerSettingsArea);
     localUser.isDev = false;
     updateDevToolsVisibility();
-    serverHistoryCache = [];
-    gameHistory = [];
+    gameHistory = []; // Clear local history for guest
     updateSimpleHistoryDisplay();
 }
 function updateHeaderDisplay() {
@@ -366,7 +361,6 @@ function handleUserUpdate(data) {
     if (data.isSuperVerified !== undefined && localUser.isSuperVerified !== data.isSuperVerified) { localUser.isSuperVerified = data.isSuperVerified; changed = true; }
     if (data.isDev !== undefined && localUser.isDev !== data.isDev) { localUser.isDev = data.isDev; changed = true; }
 
-
     if (changed) {
         updateHeaderDisplay();
         updatePointsDisplay();
@@ -376,6 +370,17 @@ function handleUserUpdate(data) {
         checkAndShowCongrats();
         if (transferModal?.style.display === 'flex') {
              updateTransferModalState();
+        }
+        // If user verification status changed, potentially clear/fetch history
+        if (localUser.isVerified !== prevVerified && localUser.isVerified) {
+            // User just became verified, request initial history
+             if (socket && socket.connected) {
+                socket.emit('requestInitialState'); // Request full state including history
+             }
+        } else if (localUser.isGuest !== wasGuest && localUser.isGuest) {
+            // User just became guest, clear history
+            gameHistory = [];
+            updateSimpleHistoryDisplay();
         }
     }
 }
@@ -473,7 +478,6 @@ function displayMessage(messageData) {
         msgDiv.appendChild(textP);
     }
 
-
     chatMessages.appendChild(msgDiv);
 
     if (isScrolledToBottom || messageData.senderUid === localUser.userId || messageData.isSystem) {
@@ -503,23 +507,159 @@ function checkAndShowCongrats() { if (!localUser.isGuest && localUser.points >= 
 function toggleMusic() { isMuted = !isMuted; audioPlayer.muted = isMuted; localStorage.setItem('txMuted', isMuted); updateMusicButtonIcon(); console.log("Music muted:", isMuted); if (!isMuted && currentServerSongPath && audioPlayer.paused && hasMusicStarted) { audioPlayer.play().catch(e => console.error("[Music] Error playing on unmute:", e)); } else if (isMuted && !audioPlayer.paused) { audioPlayer.pause(); } }
 function updateMusicButtonIcon() { if (!toggleMusicBtn) return; const icon = toggleMusicBtn.querySelector('i'); if (!icon) return; if (isMuted) { icon.className = 'fas fa-volume-mute'; toggleMusicBtn.title = 'Bật nhạc'; toggleMusicBtn.classList.add('muted'); } else { icon.className = 'fas fa-volume-up'; toggleMusicBtn.title = 'Tắt nhạc'; toggleMusicBtn.classList.remove('muted'); } }
 
-function addHistoryEntry(resultData) { const existingIndex = gameHistory.findIndex(h => h.sessionId === resultData.sessionId); const historyEntry = { sessionId: resultData.sessionId, dice: resultData.dice, sum: resultData.sum, outcome: resultData.outcome, playerBetChoice: resultData.playerBetChoice, playerBetAmount: resultData.playerBetAmount, pointChange: resultData.pointChange, isTriple: resultData.outcome.toLowerCase().includes('bộ ba') }; if (existingIndex > -1) { console.log(`Updating history for session ${resultData.sessionId}`); gameHistory[existingIndex] = historyEntry; } else { console.log(`Adding new history entry for session ${resultData.sessionId}`); gameHistory.unshift(historyEntry); } if (gameHistory.length > MAX_LOCAL_HISTORY) { gameHistory.length = MAX_LOCAL_HISTORY; } updateSimpleHistoryDisplay(); }
-function updateSimpleHistoryDisplay() { if (!historyRowEl) return; const label = historyRowEl.querySelector('span'); historyRowEl.innerHTML = ''; if (label) historyRowEl.appendChild(label); const displayLimit = MAX_SIMPLE_HISTORY; let displayedCount = 0; for (const entry of gameHistory) { if (entry.playerBetAmount > 0) { const marker = document.createElement('div'); marker.classList.add('history-marker'); if (entry.pointChange > 0) { marker.classList.add('win'); } else if (entry.pointChange < 0) { marker.classList.add('loss'); } let betString = `${entry.playerBetChoice} ${entry.playerBetAmount.toLocaleString()}`; marker.title = `Phiên #${entry.sessionId}: ${entry.outcome} (${entry.sum}) | Cược: ${betString} | KQ: ${entry.pointChange >= 0 ? '+' : ''}${entry.pointChange.toLocaleString()}`; historyRowEl.insertBefore(marker, historyRowEl.children[1]); displayedCount++; if (displayedCount >= displayLimit) { break; } } } if (displayedCount === 0 && label) { const noBetHistoryMsg = document.createElement('span'); noBetHistoryMsg.textContent = ' (Chưa có phiên cược nào)'; noBetHistoryMsg.style.fontSize = '0.8em'; noBetHistoryMsg.style.color = '#888'; historyRowEl.appendChild(noBetHistoryMsg); } }
+function addHistoryEntry(entryData) {
+    if (!entryData || entryData.sessionId === undefined) {
+        console.warn("Attempted to add invalid history entry:", entryData);
+        return;
+    }
+    // Ensure entry has all necessary fields, provide defaults if missing
+    const completeEntry = {
+        sessionId: entryData.sessionId,
+        dice: entryData.dice || [],
+        sum: entryData.sum || 0,
+        outcome: entryData.outcome || '?',
+        isTriple: entryData.isTriple || false,
+        playerBetChoice: entryData.playerBetChoice || null,
+        playerBetAmount: entryData.playerBetAmount || 0,
+        pointChange: entryData.pointChange || 0
+    };
+
+    const existingIndex = gameHistory.findIndex(h => h.sessionId === completeEntry.sessionId);
+    if (existingIndex > -1) {
+        console.log(`Replacing history entry for session ${completeEntry.sessionId}`);
+        gameHistory[existingIndex] = completeEntry;
+    } else {
+        console.log(`Adding new history entry for session ${completeEntry.sessionId}`);
+        gameHistory.unshift(completeEntry); // Add to the beginning
+    }
+
+    // Limit the total number of history entries stored locally
+    if (gameHistory.length > MAX_LOCAL_HISTORY) {
+        gameHistory.length = MAX_LOCAL_HISTORY; // Trim the oldest entries
+    }
+     // Note: updateSimpleHistoryDisplay() is called by the event handlers AFTER this function
+}
+
+function updateSimpleHistoryDisplay() {
+    if (!historyRowEl) return;
+    const label = historyRowEl.querySelector('span');
+    historyRowEl.innerHTML = ''; // Clear existing markers
+    if (label) historyRowEl.appendChild(label); // Re-add the label
+
+    let displayedCount = 0;
+    let markersAdded = false;
+
+    // Iterate through the local gameHistory (most recent first)
+    for (const entry of gameHistory) {
+        // Only display if a bet was made IN THIS SESSION by the current user
+        if (entry.playerBetAmount > 0) {
+            const marker = document.createElement('div');
+            marker.classList.add('history-marker');
+            if (entry.pointChange > 0) {
+                marker.classList.add('win');
+            } else if (entry.pointChange < 0) {
+                marker.classList.add('loss');
+            } // Implicitly grey if 0 points change (e.g., push on triple?)
+
+            let betString = `${entry.playerBetChoice} ${entry.playerBetAmount.toLocaleString()}`;
+            marker.title = `Phiên #${entry.sessionId}: ${entry.outcome} (${entry.sum}) | Cược: ${betString} | KQ: ${entry.pointChange >= 0 ? '+' : ''}${entry.pointChange.toLocaleString()}`;
+
+            // Insert after the label (always the first child now)
+            historyRowEl.insertBefore(marker, historyRowEl.children[1]);
+            displayedCount++;
+            markersAdded = true;
+
+            if (displayedCount >= MAX_SIMPLE_HISTORY) {
+                break; // Stop after reaching the display limit
+            }
+        }
+    }
+
+    // Show "no bets" message only if no markers were added
+    if (!markersAdded && label) {
+        const noBetHistoryMsg = document.createElement('span');
+        noBetHistoryMsg.textContent = ' (Chưa có phiên cược nào)';
+        noBetHistoryMsg.style.fontSize = '0.8em';
+        noBetHistoryMsg.style.color = '#888';
+        historyRowEl.appendChild(noBetHistoryMsg);
+    }
+}
+
 function renderDetailedHistoryPanel() {
-    if (!historyListEl) return; historyListEl.innerHTML = ''; const combinedHistory = []; const includedSessionIds = new Set();
-    gameHistory.forEach(localEntry => { if (localEntry.playerBetAmount > 0 && combinedHistory.length < MAX_DETAILED_HISTORY_DISPLAY && !includedSessionIds.has(localEntry.sessionId)) { combinedHistory.push({ ...localEntry, type: 'local_bet' }); includedSessionIds.add(localEntry.sessionId); } });
-    serverHistoryCache.forEach(serverEntry => { if (combinedHistory.length < MAX_DETAILED_HISTORY_DISPLAY && !includedSessionIds.has(serverEntry.sessionId)) { if (!combinedHistory.some(entry => entry.sessionId === serverEntry.sessionId)) { combinedHistory.push({ ...serverEntry, type: 'server_nobet' }); includedSessionIds.add(serverEntry.sessionId); } } });
-    combinedHistory.sort((a, b) => b.sessionId - a.sessionId); combinedHistory.length = Math.min(combinedHistory.length, MAX_DETAILED_HISTORY_DISPLAY);
-    if (combinedHistory.length === 0) { historyListEl.innerHTML = '<li>Chưa có lịch sử.</li>'; return; }
-    combinedHistory.forEach(entry => {
-        const li = document.createElement('li'); const line1 = document.createElement('div'); line1.classList.add('history-line-1'); const sessionDiceSumSpan = document.createElement('span'); sessionDiceSumSpan.classList.add('history-session-details'); sessionDiceSumSpan.textContent = `Phiên #${entry.sessionId} [${entry.dice.join('-')}] (${entry.sum})`; const outcomeSpan = document.createElement('span'); outcomeSpan.textContent = entry.outcome; outcomeSpan.classList.add('history-outcome'); if (entry.isTriple) { outcomeSpan.classList.add('history-outcome-triple'); } else { outcomeSpan.classList.add(entry.outcome === 'Tài' ? 'history-outcome-tai' : 'history-outcome-xiu'); } line1.appendChild(sessionDiceSumSpan); line1.appendChild(outcomeSpan); li.appendChild(line1);
-        const lineBet = document.createElement('div'); lineBet.classList.add('history-line-2'); const playerBetSpan = document.createElement('span'); playerBetSpan.classList.add('history-player-bet'); const pointChangeSpan = document.createElement('span'); pointChangeSpan.classList.add('history-result');
-        if (entry.type === 'local_bet' && entry.playerBetAmount > 0) { playerBetSpan.textContent = `Cược ${entry.playerBetChoice}: ${entry.playerBetAmount.toLocaleString()}`; pointChangeSpan.textContent = `${entry.pointChange >= 0 ? '+' : ''}${entry.pointChange.toLocaleString()}`; if (entry.pointChange > 0) { pointChangeSpan.classList.add('win'); } else if (entry.pointChange < 0) { pointChangeSpan.classList.add('loss'); } else { pointChangeSpan.classList.add('no-bet'); } }
-        else { playerBetSpan.textContent = `Không cược`; pointChangeSpan.textContent = `0`; pointChangeSpan.classList.add('no-bet'); }
-        lineBet.appendChild(playerBetSpan); lineBet.appendChild(pointChangeSpan); li.appendChild(lineBet); historyListEl.appendChild(li);
+    if (!historyListEl) return;
+    historyListEl.innerHTML = ''; // Clear previous entries
+
+    const displayLimit = MAX_DETAILED_HISTORY_DISPLAY;
+    const historyToDisplay = gameHistory.slice(0, displayLimit);
+
+    if (historyToDisplay.length === 0) {
+        historyListEl.innerHTML = '<li>Chưa có lịch sử phiên nào được lưu.</li>';
+        return;
+    }
+
+    historyToDisplay.forEach(entry => {
+        const li = document.createElement('li');
+        const line1 = document.createElement('div');
+        line1.classList.add('history-line-1');
+        const sessionDiceSumSpan = document.createElement('span');
+        sessionDiceSumSpan.classList.add('history-session-details');
+        sessionDiceSumSpan.textContent = `Phiên #${entry.sessionId} [${entry.dice.join('-')}] (${entry.sum})`;
+        const outcomeSpan = document.createElement('span');
+        outcomeSpan.textContent = entry.outcome;
+        outcomeSpan.classList.add('history-outcome');
+        if (entry.isTriple) {
+            outcomeSpan.classList.add('history-outcome-triple');
+        } else {
+            outcomeSpan.classList.add(entry.outcome === 'Tài' ? 'history-outcome-tai' : 'history-outcome-xiu');
+        }
+        line1.appendChild(sessionDiceSumSpan);
+        line1.appendChild(outcomeSpan);
+        li.appendChild(line1);
+
+        const lineBet = document.createElement('div');
+        lineBet.classList.add('history-line-2');
+        const playerBetSpan = document.createElement('span');
+        playerBetSpan.classList.add('history-player-bet');
+        const pointChangeSpan = document.createElement('span');
+        pointChangeSpan.classList.add('history-result');
+
+        if (entry.playerBetAmount > 0) {
+            playerBetSpan.textContent = `Cược ${entry.playerBetChoice}: ${entry.playerBetAmount.toLocaleString()}`;
+            pointChangeSpan.textContent = `${entry.pointChange >= 0 ? '+' : ''}${entry.pointChange.toLocaleString()}`;
+            if (entry.pointChange > 0) {
+                pointChangeSpan.classList.add('win');
+            } else if (entry.pointChange < 0) {
+                pointChangeSpan.classList.add('loss');
+            } else {
+                pointChangeSpan.classList.add('no-bet');
+            }
+        } else {
+            playerBetSpan.textContent = `Không cược`;
+            pointChangeSpan.textContent = `0`;
+            pointChangeSpan.classList.add('no-bet');
+        }
+        lineBet.appendChild(playerBetSpan);
+        lineBet.appendChild(pointChangeSpan);
+        li.appendChild(lineBet);
+        historyListEl.appendChild(li);
     });
 }
-function toggleDetailedHistory() { if (!historyPanelWrapperEl) return; if (localUser.isGuest ) { alert("Vui lòng đăng nhập để xem lịch sử chi tiết."); return; } const isHidden = !historyPanelWrapperEl.classList.contains('show'); if (isHidden) { renderDetailedHistoryPanel(); showModal(historyPanelWrapperEl); } else { hideModal(historyPanelWrapperEl); } }
+
+function toggleDetailedHistory() {
+    if (!historyPanelWrapperEl) return;
+    // Check verification status before showing
+    if (localUser.isGuest || !localUser.isVerified) {
+        alert("Vui lòng đăng nhập và xác thực email để xem lịch sử chi tiết.");
+        return;
+    }
+    const isHidden = !historyPanelWrapperEl.classList.contains('show');
+    if (isHidden) {
+        renderDetailedHistoryPanel(); // Render using the local gameHistory
+        showModal(historyPanelWrapperEl);
+    } else {
+        hideModal(historyPanelWrapperEl);
+    }
+}
 
 function toggleInfoModal() { if(infoModalWrapperEl) { const isHidden = !infoModalWrapperEl.classList.contains('show'); if(isHidden) showModal(infoModalWrapperEl); else hideModal(infoModalWrapperEl); } }
 function toggleSettingsModal() { if (!settingsModalWrapperEl) return; const isHidden = !settingsModalWrapperEl.classList.contains('show'); if (isHidden) { if(newUsernameInput) newUsernameInput.value = localUser.isGuest ? (localStorage.getItem('txGuestUsername') || 'Khách') : localUser.username; if(avatarSelectionContainer) { const currentAvatar = localUser.isGuest ? (localStorage.getItem('txGuestAvatarClass') || 'fas fa-user-ninja') : (localUser.avatarClass || 'fas fa-user-circle'); const options = avatarSelectionContainer.querySelectorAll('.avatar-option'); options.forEach(opt => opt.classList.toggle('selected', opt.dataset.avatar === currentAvatar)); } if(sessionDurationInput) sessionDurationInput.value = ''; if(devPasswordInput) devPasswordInput.value = ''; updateDevToolsVisibility(); if(devSetPointsInput) devSetPointsInput.value = ''; updateVerificationStatusUI(); showModal(settingsModalWrapperEl); } else { hideModal(settingsModalWrapperEl); } }
@@ -578,29 +718,23 @@ function gameOver() {
         console.log("[DEBUG] Already in GAMEOVER state. Exiting gameOver().");
         return;
     }
-
     console.log("[DEBUG] Setting gameStatus to GAMEOVER.");
     gameStatus = "GAMEOVER";
     clearInterval(localTimerInterval);
     clearInterval(waitInterval);
     disableBettingUI();
-
     console.log("[DEBUG] Hiding resultCoverEl and resultAreaEl.");
     if(resultCoverEl) hideElement(resultCoverEl);
     if(resultAreaEl) resultAreaEl.style.visibility = 'hidden';
-
     console.log("[DEBUG] Showing game over modal.");
     showModal(gameOverMessageEl);
-
     console.log(`[DEBUG] gameOverMessageEl display style after showModal: ${gameOverMessageEl.style.display}`);
     console.log(`[DEBUG] gameOverMessageEl classes after showModal: ${gameOverMessageEl.className}`);
-
     console.log("[DEBUG] Updating session status and timer text.");
     if(sessionStatusEl) sessionStatusEl.textContent = "Bạn đã hết điểm!";
     if(timerLabelEl) timerLabelEl.textContent = "Chia buồn";
     if(timerEl) timerEl.textContent = "💸";
     if(timerAreaEl) showElement(timerAreaEl);
-
     console.log("[DEBUG] gameOver() function finished.");
 }
 
@@ -611,7 +745,6 @@ async function restartGame() {
         return;
     }
     hideModal(gameOverMessageEl);
-
     if (localUser.isGuest) {
         console.log("[DEBUG] Guest restarting: Reloading page.");
         window.location.reload();
@@ -670,44 +803,33 @@ function showTransferNotification(isSuccess, data) {
         }
         return;
     }
-
     transferNotificationPanel.classList.remove('success-notification', 'error-notification');
-
     if (isSuccess) {
         transferNotificationPanel.classList.add('success-notification');
         notificationIcon.className = 'fas fa-check-circle';
         notificationTitle.textContent = 'Giao Dịch Thành Công';
-
         const senderText = `${data.senderUsername || 'Bạn'} (${data.senderUid?.substring(0, 6)}...)`;
         const recipientText = `${data.recipientUsername || 'Người nhận'} (${data.recipientUid?.substring(0, 6)}...)`;
-
         if(notificationSenderInfo) notificationSenderInfo.textContent = senderText;
          if(notificationSenderInfo) notificationSenderInfo.title = data.senderUid;
         if(notificationRecipientInfo) notificationRecipientInfo.textContent = recipientText;
          if(notificationRecipientInfo) notificationRecipientInfo.title = data.recipientUid;
         if(notificationAmount) notificationAmount.textContent = data.amountSent?.toLocaleString() || '?';
         if(notificationTimestamp) notificationTimestamp.textContent = formatTimestamp(data.timestamp);
-
         notificationSuccessDetails.style.display = 'block';
         notificationErrorDetails.style.display = 'none';
-
         closeTransferModal();
-
     } else {
         transferNotificationPanel.classList.add('error-notification');
         notificationIcon.className = 'fas fa-times-circle';
         notificationTitle.textContent = 'Giao Dịch Thất Bại';
-
         notificationErrorMessage.textContent = data.message || 'Đã xảy ra lỗi không mong muốn.';
-
         notificationSuccessDetails.style.display = 'none';
         notificationErrorDetails.style.display = 'block';
-
         if (transferModal?.classList.contains('show') && confirmTransferBtn) {
              updateTransferModalState();
         }
     }
-
     showModal(transferNotificationModal);
 }
 
@@ -717,18 +839,12 @@ function closeTransferNotification() {
 
 function openTransferModal() {
     if (!transferModal || localUser.isGuest) return;
-
-    if (currentUserUidDisplay) {
-        currentUserUidDisplay.textContent = localUser.userId || 'Không thể tải ID';
-    }
+    if (currentUserUidDisplay) { currentUserUidDisplay.textContent = localUser.userId || 'Không thể tải ID'; }
     if (copyUidFeedback) copyUidFeedback.textContent = '';
-
     if (recipientUidInput) recipientUidInput.value = '';
     if (transferAmountInput) transferAmountInput.value = '';
     if (transferErrorMsg) transferErrorMsg.textContent = '';
-
     updateTransferModalState();
-
     showModal(transferModal);
 }
 
@@ -738,26 +854,20 @@ function closeTransferModal() {
 
 function updateTransferModalState() {
     if (!confirmTransferBtn || !transferAmountInput || !recipientUidInput || !transferErrorMsg) return;
-
     const canSendBase = !localUser.isGuest && localUser.isVerified && localUser.isSuperVerified;
-
     const recipientUid = recipientUidInput.value.trim();
     const amountStr = transferAmountInput.value;
     const amount = parseInt(amountStr, 10);
-
     const minPointsRequiredAfterTransfer = 500;
     const minTransferAmount = 50;
-
     let error = '';
     let isButtonEnabled = false;
     let areInputsEnabled = canSendBase;
-
     if (!canSendBase) {
         error = 'Bạn không đủ điều kiện để gửi điểm (Cần Super Verified & Xác thực Email). Bạn chỉ có thể nhận điểm.';
         isButtonEnabled = false;
     } else {
         const maxTransferable = localUser.points - minPointsRequiredAfterTransfer;
-
         if (localUser.points < minPointsRequiredAfterTransfer + minTransferAmount) {
              error = `Bạn cần ít nhất ${minPointsRequiredAfterTransfer + minTransferAmount} điểm (${minPointsRequiredAfterTransfer} còn lại + ${minTransferAmount} tối thiểu) để chuyển.`;
              isButtonEnabled = false;
@@ -781,12 +891,10 @@ function updateTransferModalState() {
             isButtonEnabled = true;
         }
     }
-
     transferErrorMsg.textContent = error;
     recipientUidInput.disabled = !areInputsEnabled;
     transferAmountInput.disabled = !areInputsEnabled;
     confirmTransferBtn.disabled = !isButtonEnabled;
-
      if (!areInputsEnabled) {
         recipientUidInput.placeholder = 'Không đủ điều kiện gửi';
         transferAmountInput.placeholder = 'Không đủ điều kiện gửi';
@@ -804,19 +912,15 @@ async function handleConfirmTransfer() {
           if(!transferErrorMsg.textContent) transferErrorMsg.textContent = "Vui lòng điền đủ thông tin hợp lệ.";
          return;
     }
-
     const recipientUid = recipientUidInput.value.trim();
     const amount = parseInt(transferAmountInput.value, 10);
-
     const idToken = await getIdToken();
     if (!idToken) {
         if(transferErrorMsg) transferErrorMsg.textContent = "Lỗi xác thực, vui lòng thử đăng nhập lại.";
         return;
     }
-
     confirmTransferBtn.disabled = true;
     if(transferErrorMsg) transferErrorMsg.textContent = 'Đang xử lý giao dịch...';
-
     socket.emit('requestPointsTransfer', {
         recipientUid: recipientUid,
         amount: amount,
@@ -846,17 +950,46 @@ function handleCopyUid() {
 function setupSocketListeners() {
     if (!SERVER_URL || SERVER_URL.startsWith("__")) { console.error("Chưa cấu hình SERVER_URL!"); alert("Lỗi cấu hình kết nối."); if(sessionStatusEl) sessionStatusEl.textContent = "Lỗi cấu hình!"; return; } if (typeof io === 'undefined') { console.error("Socket.IO client not loaded!"); alert("Lỗi tải thư viện kết nối."); if(sessionStatusEl) sessionStatusEl.textContent = "Lỗi tải thư viện!"; return; } console.log("Setting up Socket.IO connection to:", SERVER_URL); if(socket && socket.connected) { socket.disconnect(); } socket = io(SERVER_URL, { reconnection: true, reconnectionAttempts: 5, reconnectionDelay: 1000, transports: ['websocket', 'polling'] });
     socket.on("connect", async () => { console.log("Connected to server:", socket.id); if(sessionStatusEl) sessionStatusEl.textContent = "Đã kết nối!"; gameStatus = "CONNECTED"; if (currentUser) { const idToken = await getIdToken(); if(idToken) { console.log("Emitting userLoggedIn on connect"); socket.emit('userLoggedIn', { token: idToken }); } else { console.error("Logged in user but failed to get token on connect."); } } else { console.log("User is guest on connect."); } socket.emit('requestInitialState'); });
-    socket.on('initialServerHistory', (historyData) => { console.log(`Received initialServerHistory with ${historyData.length} records.`); if (Array.isArray(historyData)) { serverHistoryCache = historyData; if (historyPanelWrapperEl?.classList.contains('show')) { renderDetailedHistoryPanel(); } } else { console.error("Invalid initial history data received."); serverHistoryCache = []; } });
+    socket.on('initialServerHistory', (historyData) => {
+        console.log(`Received initialServerHistory with ${historyData.length} records.`);
+        if (!localUser.isGuest && localUser.isVerified) {
+            if (Array.isArray(historyData)) {
+                gameHistory = []; // Clear local history before populating
+                historyData.forEach(serverEntry => {
+                    // Add placeholder bet info for initial server records
+                    const localEntry = {
+                        sessionId: serverEntry.sessionId,
+                        dice: serverEntry.dice || [],
+                        sum: serverEntry.sum || 0,
+                        outcome: serverEntry.outcome || '?',
+                        isTriple: serverEntry.isTriple || false,
+                        playerBetChoice: null, // No bet info for these past sessions
+                        playerBetAmount: 0,
+                        pointChange: 0
+                    };
+                    gameHistory.push(localEntry); // Push, oldest first
+                });
+                // Ensure gameHistory is sorted by session ID descending after populating
+                gameHistory.sort((a, b) => b.sessionId - a.sessionId);
+                console.log(`Populated local gameHistory with ${gameHistory.length} initial records.`);
+                updateSimpleHistoryDisplay(); // Update simple display based on new history
+            } else {
+                console.error("Invalid initial history data received.");
+                gameHistory = [];
+                updateSimpleHistoryDisplay();
+            }
+        } else {
+            console.log("User not verified or guest, ignoring initial history.");
+        }
+    });
     socket.on('historyError', (message) => { console.error("History Error from server:", message); if (historyPanelWrapperEl?.classList.contains('show') && historyListEl) { historyListEl.innerHTML = `<li style="color: var(--error-color); text-align: center;">${message}</li>`; } if (message.includes("Lỗi tải lịch sử ban đầu")) { alert(`Lỗi tải lịch sử: ${message}`); } });
     socket.on('leaderboardUpdate', (topPlayers) => {
         if (!leaderboardList) return;
         leaderboardList.innerHTML = '';
-
         if (!topPlayers || topPlayers.length === 0) {
             leaderboardList.innerHTML = '<li>Chưa có dữ liệu xếp hạng.</li>';
             return;
         }
-
         const displayLimit = 5;
         topPlayers.slice(0, displayLimit).forEach((player, index) => {
             const li = document.createElement('li');
@@ -864,13 +997,11 @@ function setupSocketListeners() {
             rankSpan.className = 'leaderboard-rank';
             rankSpan.textContent = `${index + 1}.`;
             li.appendChild(rankSpan);
-
             const nameSpan = document.createElement('span');
             nameSpan.className = 'leaderboard-name';
             nameSpan.textContent = player.username || 'Người chơi ẩn';
             nameSpan.title = player.username || 'Người chơi ẩn';
             li.appendChild(nameSpan);
-
             const badgeContainer = document.createElement('span');
             badgeContainer.classList.add('super-verified-badge-container');
              if (player.isSuperVerified) {
@@ -881,12 +1012,10 @@ function setupSocketListeners() {
                 badgeContainer.appendChild(badgeImg);
             }
             li.appendChild(badgeContainer);
-
             const pointsSpan = document.createElement('span');
             pointsSpan.className = 'leaderboard-points';
             pointsSpan.textContent = (player.points !== undefined && player.points !== null) ? player.points.toLocaleString() : 'N/A';
             li.appendChild(pointsSpan);
-
             leaderboardList.appendChild(li);
         });
     });
@@ -899,7 +1028,28 @@ function setupSocketListeners() {
     socket.on("betPlaced", (data) => { console.log("Server confirmed bet:", data); currentBetState.choice = data.choice; currentBetState.amount = data.amount; currentBetState.confirmed = true; showTemporaryMessage(currentBetMessageEl, `Đã cược: ${data.choice} (${data.amount.toLocaleString()})`, 'win'); updateBettingUIAccess(); });
     socket.on("betCancelled", () => { console.log("Server confirmed bet cancellation."); resetBetState(); showTemporaryMessage(currentBetMessageEl, "Đã hủy cược.", 'info'); updateBettingUIAccess(); });
     socket.on("betError", (message) => { console.error("Bet Error from server:", message); showTemporaryMessage(currentBetMessageEl, message, 'loss'); updateBettingUIAccess(); });
-    socket.on("betResult", (data) => { console.log("Received betResult:", data); let msg = `Phiên #${data.sessionId}: ${data.outcome} (${data.sum}). `; if (data.pointChange > 0) { msg += `Thắng +${data.pointChange.toLocaleString()}`; if(resultMessageEl) resultMessageEl.className = 'win'; } else if (data.pointChange < 0) { msg += `Thua ${data.pointChange.toLocaleString()}`; if(resultMessageEl) resultMessageEl.className = 'loss'; } else { msg += `Không thắng/thua.`; if(resultMessageEl) resultMessageEl.className = 'no-bet'; } if(resultMessageEl) resultMessageEl.textContent = msg; addHistoryEntry({ sessionId: data.sessionId, dice: data.dice, sum: data.sum, outcome: data.outcome, playerBetChoice: data.playerBetChoice, playerBetAmount: data.playerBetAmount, pointChange: data.pointChange, isTriple: data.isTriple }); resetBetState(); });
+    socket.on("betResult", (data) => {
+        console.log("Received betResult:", data);
+        let msg = `Phiên #${data.sessionId}: ${data.outcome} (${data.sum}). `;
+        if (data.pointChange > 0) { msg += `Thắng +${data.pointChange.toLocaleString()}`; if(resultMessageEl) resultMessageEl.className = 'win'; }
+        else if (data.pointChange < 0) { msg += `Thua ${data.pointChange.toLocaleString()}`; if(resultMessageEl) resultMessageEl.className = 'loss'; }
+        else { msg += `Không thắng/thua.`; if(resultMessageEl) resultMessageEl.className = 'no-bet'; }
+        if(resultMessageEl) resultMessageEl.textContent = msg;
+
+        // Add full entry from betResult to local history
+        addHistoryEntry({
+            sessionId: data.sessionId,
+            dice: data.dice,
+            sum: data.sum,
+            outcome: data.outcome,
+            isTriple: data.isTriple,
+            playerBetChoice: data.playerBetChoice, // Use server confirmed bet details
+            playerBetAmount: data.playerBetAmount,
+            pointChange: data.pointChange
+        });
+        updateSimpleHistoryDisplay(); // Update dots based on the new entry
+        resetBetState();
+    });
     socket.on('profileUpdateSuccess', (data) => { console.log("Profile update successful:", data); alert("Cập nhật thông tin thành công!"); });
     socket.on('profileError', (message) => { console.error("Profile Error from server:", message); alert(`Lỗi cập nhật thông tin: ${message}`); });
     socket.on('devModeStatus', (data) => { console.log("Received devModeStatus:", data.isDev); localUser.isDev = data.isDev; updateDevToolsVisibility(); if (settingsModalWrapperEl?.classList.contains('show')) { if (data.isDev) alert("Quyền nhà phát triển đã được xác nhận!"); else alert("Bạn không có quyền nhà phát triển."); } });
@@ -1026,8 +1176,9 @@ function updateUIFromState(state) {
     clearInterval(waitInterval);
     centerDisplayEl?.classList.remove('low-time');
 
-    currentSessionCount = state.sessionCount;
+    const previousSessionCount = currentSessionCount;
     const previousGameStatus = gameStatus;
+    currentSessionCount = state.sessionCount;
     gameStatus = state.status;
     const now = Date.now();
     const serverEndTime = state.endTime;
@@ -1162,19 +1313,34 @@ function updateUIFromState(state) {
                     setTimeout(() => resultAreaEl.classList.remove('reveal-animation'), 800);
                 }
 
+                // Add history entry here if user is verified and didn't bet
+                 if (!localUser.isGuest && localUser.isVerified) {
+                     const alreadyAdded = gameHistory.some(entry => entry.sessionId === state.sessionCount);
+                     if (!alreadyAdded) {
+                         addHistoryEntry({
+                             sessionId: state.sessionCount,
+                             dice: result.dice || [result.d1, result.d2, result.d3], // Ensure dice array exists
+                             sum: result.sum,
+                             outcome: result.outcome,
+                             isTriple: result.isTriple,
+                             playerBetChoice: null,
+                             playerBetAmount: 0,
+                             pointChange: 0
+                         });
+                         updateSimpleHistoryDisplay(); // Update display after adding no-bet history
+                     }
+                 }
+
                 const waitTimeLeft = Math.max(0, Math.floor((serverEndTime - now) / 1000));
                  const updateWaitStatus = (timeLeft) => {
                      if(sessionStatusEl) sessionStatusEl.textContent = `Phiên #${state.sessionCount} - KQ: ${result.outcome}. Phiên mới sau ${timeLeft}s...`;
                  };
-
                  updateWaitStatus(waitTimeLeft);
-
                 if (waitTimeLeft > 0) {
                     waitInterval = setInterval(() => {
                         const currentNowWait = Date.now();
                         const currentWaitLeft = Math.max(0, Math.floor((serverEndTime - currentNowWait) / 1000));
                         updateWaitStatus(currentWaitLeft);
-
                         if (currentWaitLeft <= 0) {
                             clearInterval(waitInterval);
                             if(sessionStatusEl) sessionStatusEl.textContent = `Phiên #${state.sessionCount} - KQ: ${result.outcome}. Chuẩn bị...`;
@@ -1290,4 +1456,3 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`[KeepAlive] Periodic ping every ${PING_INTERVAL_MS / 1000 / 60} minutes initialized.`);
 
 });
-// --- END OF FILE script.js ---
