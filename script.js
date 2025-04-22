@@ -1393,12 +1393,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Proceeding with initial UI setup after initial ping attempt...");
              // Show the warning modal after the ping attempt
              if (entryWarningModal) showModal(entryWarningModal);
-        });
+        }); 
 
-    setInterval(keepAlivePing, PING_INTERVAL_MS);
+    setInterval(keepAlivePing, PING_INTERVAL_MS); 
     console.log(`[KeepAlive] Periodic ping every ${PING_INTERVAL_MS / 1000 / 60} minutes initialized.`);
 
-    // Moved showing the warning modal to after the initial ping attempt
-    // if (entryWarningModal) showModal(entryWarningModal);
-});
+}); 
 // --- END OF FILE script.js ---
